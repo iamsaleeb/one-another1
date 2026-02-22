@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 
+
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
@@ -31,20 +32,18 @@ export default function Home() {
               title: "Community Outreach",
               location: "Downtown Community Center",
               host: "Deacon Peter",
-              tag: "Outreach",
+              tag: "Camp",
             },
           ].map((item) => (
             <Card key={item.title} className="rounded-2xl border-0 bg-white py-0 shadow-[4px_4px_10px_0px_#E8E8E866]">
-              <CardContent className="flex items-start justify-between p-4">
-                <div className="flex flex-col gap-0.5">
-                  <p className="text-xs text-muted-foreground font-medium">{item.datetime}</p>
-                  <p className="text-sm font-semibold">{item.title}</p>
-                  <p className="text-xs text-muted-foreground">{item.location}</p>
-                  <p className="text-xs text-muted-foreground">{item.host}</p>
+              <CardContent className="flex flex-col gap-1.5 p-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold text-primary uppercase tracking-wide">{item.datetime}</p>
+                  <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary whitespace-nowrap">{item.tag}</span>
                 </div>
-                <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary whitespace-nowrap ml-3">
-                  {item.tag}
-                </span>
+                <p className="text-lg font-bold leading-snug">{item.title}</p>
+                <p className="text-sm text-muted-foreground">{item.location}</p>
+                <p className="text-sm text-muted-foreground">{item.host}</p>
               </CardContent>
             </Card>
           ))}
