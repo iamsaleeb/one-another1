@@ -7,14 +7,7 @@ export default function Home() {
     <div className="flex flex-col min-h-screen">
       {/* Header */}
       <header className="flex items-center justify-between px-4 pt-5 pb-4">
-        <div>
-          <p className="text-sm text-muted-foreground">Good morning 👋</p>
-          <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
-        </div>
-        <Button variant="ghost" size="icon" className="relative rounded-full">
-          <Bell className="size-5" />
-          <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary" />
-        </Button>
+        <h1 className="text-2xl font-bold tracking-tight">Home</h1>
       </header>
 
       {/* Body */}

@@ -22,7 +22,6 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -35,8 +34,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        {/* Mobile-first container */}
-        <div className="mx-auto min-h-screen max-w-lg">
+        <div className="min-h-screen">
           <TopNav />
           <main className="pb-16">{children}</main>
           <BottomNav />
