@@ -15,7 +15,10 @@
       "Bash(git:*)",
       "Bash(npm install:*)",
       "Bash(node:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "Bash(mkdir:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
