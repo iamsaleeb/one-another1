@@ -7,8 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, X, ChevronLeft } from "lucide-react";
-import { events } from "@/lib/data/events";
-import { churches } from "@/lib/data/churches";
 
 function TopNavInner() {
   const pathname = usePathname();
@@ -22,19 +20,19 @@ function TopNavInner() {
     setQuery(urlQuery);
   }, [urlQuery]);
 
-  const id = params?.id ? Number(params.id) : null;
+  const id = params?.id ?? null;
   const isEventDetail = pathname.startsWith("/events/") && id !== null;
   const isChurchDetail = pathname.startsWith("/churches/") && id !== null;
   const isDetailPage = isEventDetail || isChurchDetail;
 
   let detailTitle = "";
   let backHref = "/";
-  if (isEventDetail && id) {
-    detailTitle = events.find((e) => e.id === id)?.title ?? "Event";
+  if (isEventDetail) {
+    detailTitle = "Event";
     backHref = "/";
   }
-  if (isChurchDetail && id) {
-    detailTitle = churches.find((c) => c.id === id)?.name ?? "Church";
+  if (isChurchDetail) {
+    detailTitle = "Church";
     backHref = "/churches";
   }
 
@@ -124,4 +122,3 @@ export function TopNav() {
     </Suspense>
   );
 }
-
