@@ -1,26 +1,42 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams, useParams } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, X } from "lucide-react";
+import { Search, X, ChevronLeft } from "lucide-react";
+import { events } from "@/lib/data/events";
+import { churches } from "@/lib/data/churches";
 
-export function TopNav() {
+function TopNavInner() {
   const pathname = usePathname();
   const router = useRouter();
+  const params = useParams();
   const searchParams = useSearchParams();
   const urlQuery = searchParams.get("q") ?? "";
   const [query, setQuery] = useState(urlQuery);
 
-  // Keep input in sync with URL (e.g. back/forward navigation)
   useEffect(() => {
     setQuery(urlQuery);
   }, [urlQuery]);
 
-  if (pathname.startsWith("/events/") || pathname.startsWith("/churches/")) return null;
+  const id = params?.id ? Number(params.id) : null;
+  const isEventDetail = pathname.startsWith("/events/") && id !== null;
+  const isChurchDetail = pathname.startsWith("/churches/") && id !== null;
+  const isDetailPage = isEventDetail || isChurchDetail;
+
+  let detailTitle = "";
+  let backHref = "/";
+  if (isEventDetail && id) {
+    detailTitle = events.find((e) => e.id === id)?.title ?? "Event";
+    backHref = "/";
+  }
+  if (isChurchDetail && id) {
+    detailTitle = churches.find((c) => c.id === id)?.name ?? "Church";
+    backHref = "/churches";
+  }
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -39,11 +55,20 @@ export function TopNav() {
 
   return (
     <header className="sticky top-0 z-50 bg-primary">
-      {/* Brand row */}
       <div className="flex h-14 items-center justify-between px-4">
-        <Link href="/" className="text-xl font-bold tracking-tight text-primary-foreground">
-          1Another
-        </Link>
+        {isDetailPage ? (
+          <button
+            onClick={() => router.push(backHref)}
+            className="flex items-center gap-1 text-primary-foreground"
+          >
+            <ChevronLeft className="w-5 h-5" />
+            <span className="text-sm font-semibold max-w-[200px] truncate">{detailTitle}</span>
+          </button>
+        ) : (
+          <Link href="/" className="text-xl font-bold tracking-tight text-primary-foreground">
+            1Another
+          </Link>
+        )}
         <Link href="/profile">
           <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/80" asChild>
             <span>
@@ -58,7 +83,7 @@ export function TopNav() {
         </Link>
       </div>
 
-      {/* Search row */}
+      {!isDetailPage && (
       <div className="bg-white px-4 py-2.5 border-b border-border">
         <form onSubmit={handleSearch} className="flex items-center gap-2">
           <div className="relative flex-1">
@@ -87,6 +112,16 @@ export function TopNav() {
           </button>
         </form>
       </div>
+      )}
     </header>
   );
 }
+
+export function TopNav() {
+  return (
+    <Suspense>
+      <TopNavInner />
+    </Suspense>
+  );
+}
+

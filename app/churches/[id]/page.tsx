@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  ChevronLeft,
   MapPin,
   Phone,
   Globe,
@@ -24,14 +23,7 @@ export default async function ChurchDetailPage({
 
   if (!church) {
     return (
-      <div className="fixed inset-0 flex flex-col bg-background px-4 pt-5">
-        <Link
-          href="/churches"
-          className="flex items-center gap-1 text-sm text-muted-foreground mb-6"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          Back
-        </Link>
+      <div className="px-4 pt-5">
         <p className="text-lg font-semibold">Church not found.</p>
       </div>
     );
@@ -40,18 +32,10 @@ export default async function ChurchDetailPage({
   const upcomingEvents = getChurchEvents(church);
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-background">
-      {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto">
+    <div className="bg-background">
 
         {/* Hero banner */}
-        <div className="relative w-full h-48 bg-gradient-to-br from-primary/80 via-primary to-primary/60 shrink-0">
-          <Link
-            href="/churches"
-            className="absolute top-4 left-4 flex items-center justify-center w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm text-white"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </Link>
+        <div className="relative w-full h-48 bg-gradient-to-br from-primary/80 via-primary to-primary/60">
           {/* Decorative circles */}
           <div className="absolute bottom-0 right-0 w-40 h-40 rounded-full bg-white/10" />
           <div className="absolute top-6 right-12 w-20 h-20 rounded-full bg-white/10" />
@@ -203,10 +187,9 @@ export default async function ChurchDetailPage({
             )}
           </section>
         </div>
-      </div>
 
       {/* Bottom action bar */}
-      <div className="shrink-0 px-4 py-4 bg-white shadow-[0px_-2px_31px_0px_#0000001A] flex items-center justify-between gap-3">
+      <div className="sticky bottom-0 z-10 px-4 py-4 bg-white shadow-[0px_-2px_31px_0px_#0000001A] flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Users className="w-4 h-4 shrink-0" />
           <span>
