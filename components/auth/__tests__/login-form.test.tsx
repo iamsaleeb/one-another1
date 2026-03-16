@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useActionState } from 'react'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
@@ -20,9 +20,7 @@ jest.mock('react', () => {
 
 import { LoginForm } from '@/components/auth/login-form'
 
-const mockUseActionState = (
-  require('react') as { useActionState: jest.Mock }
-).useActionState
+const mockUseActionState = jest.mocked(useActionState)
 
 function setupState(overrides: Partial<{ error: string; fieldErrors: Record<string, string[]> }> = {}) {
   mockUseActionState.mockReturnValue([overrides, mockDispatch, false])

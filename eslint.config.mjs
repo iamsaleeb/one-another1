@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Jest config must use CJS require()
+    "jest.config.js",
+    // Generated coverage report
+    "coverage/**",
   ]),
 ]);
 
