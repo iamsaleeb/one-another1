@@ -1,36 +1,14 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { MapPin, Phone, Globe, ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { Church } from "lucide-react";
+import { churches } from "@/lib/data/churches";
 
-const churches = [
-  {
-    name: "Grace Community Church",
-    address: "123 Main St, Austin, TX",
-    phone: "(512) 555-0101",
-    website: "gracecommunity.org",
-    tag: "Non-denominational",
-  },
-  {
-    name: "New Life Fellowship",
-    address: "456 Elm Ave, Austin, TX",
-    phone: "(512) 555-0182",
-    website: "newlifefellowship.org",
-    tag: "Baptist",
-  },
-  {
-    name: "Harvest Church",
-    address: "789 Oak Blvd, Austin, TX",
-    phone: "(512) 555-0147",
-    website: "harvestchurch.com",
-    tag: "Pentecostal",
-  },
-  {
-    name: "City Light Church",
-    address: "321 Pine Rd, Austin, TX",
-    phone: "(512) 555-0193",
-    website: "citylightchurch.com",
-    tag: "Presbyterian",
-  },
+const gradients = [
+  "from-rose-800 via-rose-600 to-orange-400",
+  "from-amber-900 via-amber-700 to-yellow-500",
+  "from-sky-800 via-sky-600 to-blue-400",
+  "from-emerald-800 via-emerald-600 to-teal-400",
+  "from-violet-800 via-violet-600 to-purple-400",
+  "from-stone-700 via-stone-500 to-stone-400",
 ];
 
 export default function ChurchesPage() {
@@ -43,41 +21,26 @@ export default function ChurchesPage() {
         </p>
       </header>
 
-      <div className="flex flex-col gap-3 px-4 py-2">
-        {churches.map((church) => (
-          <Card
-            key={church.name}
-            className="rounded-2xl border-0 bg-muted/40 shadow-sm"
-          >
-            <CardContent className="flex flex-col gap-3 p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex flex-col gap-0.5">
-                  <p className="text-sm font-semibold">{church.name}</p>
-                  <span className="w-fit rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                    {church.tag}
-                  </span>
-                </div>
-                <Button variant="ghost" size="icon" className="size-7 -mr-1 -mt-1">
-                  <ChevronRight className="size-4 text-muted-foreground" />
-                </Button>
+      <div className="grid grid-cols-2 gap-3 px-4 py-2 pb-24">
+        {churches.map((church, i) => (
+          <Link key={church.id} href={`/churches/${church.id}`}>
+            <div className="relative aspect-square rounded-2xl overflow-hidden shadow-md">
+              {/* Gradient background */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${gradients[i % gradients.length]}`} />
+
+              {/* Subtle icon watermark */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-10">
+                <Church className="w-24 h-24 text-white" />
               </div>
 
-              <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
-                <span className="flex items-center gap-2">
-                  <MapPin className="size-3 shrink-0" />
-                  {church.address}
-                </span>
-                <span className="flex items-center gap-2">
-                  <Phone className="size-3 shrink-0" />
-                  {church.phone}
-                </span>
-                <span className="flex items-center gap-2">
-                  <Globe className="size-3 shrink-0" />
-                  {church.website}
-                </span>
+              {/* Bottom gradient overlay + name */}
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pt-10 pb-3 px-3">
+                <p className="text-white text-sm font-bold leading-snug drop-shadow">
+                  {church.name}
+                </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </Link>
         ))}
       </div>
     </div>
