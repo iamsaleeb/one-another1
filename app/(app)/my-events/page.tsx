@@ -1,41 +1,7 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Clock, MapPin, Plus } from "lucide-react";
-
-const events = [
-  {
-    title: "Sunday Worship Service",
-    church: "Grace Community Church",
-    date: "Sun, Feb 23",
-    time: "10:00 AM",
-    location: "Main Sanctuary",
-    status: "upcoming",
-  },
-  {
-    title: "Prayer Group",
-    church: "New Life Fellowship",
-    date: "Wed, Feb 26",
-    time: "7:00 PM",
-    location: "Room 204",
-    status: "upcoming",
-  },
-  {
-    title: "Youth Bible Study",
-    church: "Grace Community Church",
-    date: "Fri, Feb 28",
-    time: "6:30 PM",
-    location: "Youth Hall",
-    status: "upcoming",
-  },
-  {
-    title: "Community Outreach",
-    church: "Harvest Church",
-    date: "Sat, Mar 1",
-    time: "9:00 AM",
-    location: "Downtown Park",
-    status: "upcoming",
-  },
-];
+import { Plus } from "lucide-react";
+import { myUpcomingEvents, myPastEvents } from "@/lib/data/events";
+import { EventCard } from "@/components/event-card";
 
 export default function MyEventsPage() {
   return (
@@ -44,7 +10,7 @@ export default function MyEventsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">My Events</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {events.length} upcoming events
+            {myUpcomingEvents.length} upcoming
           </p>
         </div>
         <Button size="icon" className="rounded-full size-9">
@@ -52,42 +18,36 @@ export default function MyEventsPage() {
         </Button>
       </header>
 
-      <div className="flex flex-col gap-3 px-4 py-2">
-        {events.map((event) => (
-          <Card
-            key={event.title}
-            className="rounded-2xl border-0 bg-muted/40 shadow-sm"
-          >
-            <CardContent className="flex gap-4 p-4">
-              {/* Date badge */}
-              <div className="flex w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-primary/10 py-2">
-                <CalendarDays className="size-4 text-primary" />
-                <p className="mt-1 text-[10px] font-bold leading-tight text-primary text-center">
-                  {event.date.split(",")[1]?.trim() ?? event.date}
-                </p>
-              </div>
+      <div className="flex flex-col gap-6 px-4 py-2">
+        {/* Upcoming */}
+        <section className="flex flex-col gap-3">
+          <h2 className="text-base font-semibold">Upcoming</h2>
+          {myUpcomingEvents.length > 0 ? (
+            myUpcomingEvents.map((event) => (
+              <EventCard key={event.id} event={event} />
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground py-4 text-center">
+              No upcoming events
+            </p>
+          )}
+        </section>
 
-              {/* Details */}
-              <div className="flex flex-col gap-1 min-w-0">
-                <p className="text-sm font-semibold truncate">{event.title}</p>
-                <p className="text-xs text-primary font-medium truncate">
-                  {event.church}
-                </p>
-                <div className="flex flex-col gap-0.5 mt-1 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="size-3 shrink-0" />
-                    {event.date} · {event.time}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <MapPin className="size-3 shrink-0" />
-                    {event.location}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        {/* Past */}
+        <section className="flex flex-col gap-3">
+          <h2 className="text-base font-semibold">Past</h2>
+          {myPastEvents.length > 0 ? (
+            myPastEvents.map((event) => (
+              <EventCard key={event.id} event={event} />
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground py-4 text-center">
+              No past events
+            </p>
+          )}
+        </section>
       </div>
     </div>
   );
 }
+

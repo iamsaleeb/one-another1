@@ -40,3 +40,42 @@ export const events: Event[] = [
       "Roll up your sleeves and serve alongside Deacon Peter and the wider community. We will be volunteering at the Downtown Community Center — food, fellowship, and making a difference together.",
   },
 ];
+
+export const pastEvents: Event[] = [
+  {
+    id: 101,
+    datetime: "SUN, 1 MAR | 10:00 AM",
+    title: "Sunday Worship Service",
+    location: "Grace Community Church",
+    host: "Fr Daniel Hanna",
+    tag: "Worship",
+    description:
+      "A morning of worship, prayer, and the word. Fr Daniel Hanna led the congregation through a powerful reflection on grace and renewal.",
+  },
+  {
+    id: 102,
+    datetime: "WED, 5 MAR | 7:00 PM",
+    title: "Lenten Prayer Group",
+    location: "New Life Fellowship",
+    host: "Fr Mark Mikhail",
+    tag: "Prayer",
+    description:
+      "A mid-week gathering during the Lenten season for prayer, fasting reflections, and community support.",
+  },
+  {
+    id: 103,
+    datetime: "FRI, 7 MAR | 6:30 PM",
+    title: "Youth Bible Study",
+    location: "St George Church — Youth Hall",
+    host: "Deacon Paul",
+    tag: "Bible Study",
+    description:
+      "Young adults came together to explore the Book of Romans with Deacon Paul. An evening of deep discussion and spiritual growth.",
+  },
+];
+
+/** Events the current user has RSVPd to (upcoming) */
+export const myUpcomingEvents: Event[] = [events[0], events[2]];
+
+/** Past events the current user attended */
+export const myPastEvents: Event[] = pastEvents;
