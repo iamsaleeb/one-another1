@@ -24,9 +24,9 @@ async function main() {
       totalEvents: 48,
       serviceTimes: {
         create: [
-          { day: "Sunday", time: "9:00 AM", type: "Morning Service" },
-          { day: "Sunday", time: "11:00 AM", type: "Main Service" },
-          { day: "Wednesday", time: "7:00 PM", type: "Midweek Bible Study" },
+          { day: "Sunday", time: "9:00 AM - 10:30 AM", type: "Morning Service" },
+          { day: "Sunday", time: "11:00 AM - 12:30 PM", type: "Main Service" },
+          { day: "Wednesday", time: "7:00 PM - 8:30 PM", type: "Midweek Bible Study" },
         ],
       },
     },
@@ -47,9 +47,9 @@ async function main() {
       totalEvents: 72,
       serviceTimes: {
         create: [
-          { day: "Sunday", time: "8:30 AM", type: "Early Service" },
-          { day: "Sunday", time: "10:30 AM", type: "Main Service" },
-          { day: "Friday", time: "6:30 PM", type: "Youth Fellowship" },
+          { day: "Sunday", time: "8:30 AM - 10:00 AM", type: "Early Service" },
+          { day: "Sunday", time: "10:30 AM - 12:00 PM", type: "Main Service" },
+          { day: "Friday", time: "6:30 PM - 8:00 PM", type: "Youth Fellowship" },
         ],
       },
     },
@@ -70,8 +70,8 @@ async function main() {
       totalEvents: 35,
       serviceTimes: {
         create: [
-          { day: "Sunday", time: "10:00 AM", type: "Worship Service" },
-          { day: "Thursday", time: "7:30 PM", type: "Prayer Night" },
+          { day: "Sunday", time: "10:00 AM - 11:30 AM", type: "Worship Service" },
+          { day: "Thursday", time: "7:30 PM - 9:00 PM", type: "Prayer Night" },
         ],
       },
     },
@@ -92,10 +92,10 @@ async function main() {
       totalEvents: 124,
       serviceTimes: {
         create: [
-          { day: "Sunday", time: "9:00 AM", type: "Traditional Service" },
-          { day: "Sunday", time: "11:00 AM", type: "Contemporary Service" },
-          { day: "Sunday", time: "6:00 PM", type: "Evening Service" },
-          { day: "Tuesday", time: "7:00 PM", type: "Small Groups" },
+          { day: "Sunday", time: "9:00 AM - 10:30 AM", type: "Traditional Service" },
+          { day: "Sunday", time: "11:00 AM - 12:30 PM", type: "Contemporary Service" },
+          { day: "Sunday", time: "6:00 PM - 7:30 PM", type: "Evening Service" },
+          { day: "Tuesday", time: "7:00 PM - 8:30 PM", type: "Small Groups" },
         ],
       },
     },

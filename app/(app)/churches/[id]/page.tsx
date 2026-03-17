@@ -1,18 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  MapPin,
-  Phone,
-  Globe,
-  Clock,
-  Users,
-  CalendarDays,
-  Church,
-  Mail,
-} from "lucide-react";
+import { Globe, MapPin, Facebook, Share2, CalendarDays, ChevronDown, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getChurchById } from "@/lib/actions/data";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { getChurchById } from "@/lib/actions/data";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -32,184 +25,141 @@ export default async function ChurchDetailPage({ params }: Props) {
 
   const upcomingEvents = church.events;
 
+  // Group service times by day, preserving insertion order
+  const servicesByDay = church.serviceTimes.reduce<
+    Record<string, typeof church.serviceTimes>
+  >((acc, service) => {
+    if (!acc[service.day]) acc[service.day] = [];
+    acc[service.day].push(service);
+    return acc;
+  }, {});
+
+  const SHOW_PER_DAY = 2;
+
   return (
-    <div className="bg-background">
+    <div className="bg-muted/20 min-h-screen pb-8">
+      {/* Church Info Card */}
+      <div className="px-4 pt-5 pb-3">
+        <Card className="rounded-2xl border-0 shadow-none overflow-hidden" style={{ backgroundColor: "#F3614D0D" }}>
+          <CardContent className="flex flex-col items-center gap-4 pt-6 pb-5 px-5">
+            {/* Circular Avatar */}
+            <Avatar className="size-24 ring-4 ring-primary/10">
+              <AvatarFallback className="bg-primary/10 text-primary text-3xl font-bold">
+                {church.name.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
 
-        {/* Hero banner */}
-        <div className="relative w-full h-48 bg-gradient-to-br from-primary/80 via-primary to-primary/60">
-          {/* Decorative circles */}
-          <div className="absolute bottom-0 right-0 w-40 h-40 rounded-full bg-white/10" />
-          <div className="absolute top-6 right-12 w-20 h-20 rounded-full bg-white/10" />
-        </div>
+            {/* Church Name */}
+            <h1 className="text-xl font-bold text-primary text-center leading-snug px-2">
+              {church.name}
+            </h1>
 
-        {/* Avatar overlapping banner */}
-        <div className="relative px-4">
-          <div className="-mt-10 mb-4 flex items-end justify-between">
-            <div className="flex items-center justify-center w-20 h-20 rounded-2xl bg-white shadow-md border border-border">
-              <Church className="w-9 h-9 text-primary" />
-            </div>
-            <div className="flex items-center gap-2 pb-1">
-              <Button variant="outline" size="sm" className="h-8 rounded-full px-4 text-xs font-semibold">
-                Contact
-              </Button>
-              <Button size="sm" className="h-8 rounded-full px-4 text-xs font-semibold">
-                Follow
-              </Button>
-            </div>
-          </div>
-
-          {/* Church name & denomination */}
-          <div className="flex flex-col gap-1.5 mb-4">
-            <h1 className="text-xl font-bold leading-snug">{church.name}</h1>
-            <span className="w-fit rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-              {church.denomination}
-            </span>
-          </div>
-
-          {/* Stats row */}
-          <div className="flex items-center gap-0 rounded-2xl bg-white shadow-[4px_4px_10px_0px_#E8E8E866] mb-5 divide-x divide-border overflow-hidden">
-            <div className="flex flex-1 flex-col items-center gap-0.5 py-3">
-              <p className="text-base font-bold">{church.followers.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground">Followers</p>
-            </div>
-            <div className="flex flex-1 flex-col items-center gap-0.5 py-3">
-              <p className="text-base font-bold">{church.members.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground">Members</p>
-            </div>
-            <div className="flex flex-1 flex-col items-center gap-0.5 py-3">
-              <p className="text-base font-bold">{church.totalEvents}</p>
-              <p className="text-xs text-muted-foreground">Events</p>
-            </div>
-            <div className="flex flex-1 flex-col items-center gap-0.5 py-3">
-              <p className="text-base font-bold">{church.founded}</p>
-              <p className="text-xs text-muted-foreground">Founded</p>
-            </div>
-          </div>
-
-          {/* About */}
-          <section className="mb-5">
-            <h2 className="text-sm font-bold tracking-wide uppercase text-muted-foreground mb-2">
-              About
-            </h2>
-            <div className="rounded-2xl bg-white shadow-[4px_4px_10px_0px_#E8E8E866] p-4">
-              <p className="text-sm text-foreground leading-relaxed">
-                {church.description}
-              </p>
-            </div>
-          </section>
-
-          {/* Service Times */}
-          <section className="mb-5">
-            <h2 className="text-sm font-bold tracking-wide uppercase text-muted-foreground mb-2">
-              Service Times
-            </h2>
-            <div className="rounded-2xl bg-white shadow-[4px_4px_10px_0px_#E8E8E866] divide-y divide-border overflow-hidden">
-              {church.serviceTimes.map((service) => (
-                <div key={service.id} className="flex items-center gap-3 px-4 py-3">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 shrink-0">
-                    <Clock className="w-3.5 h-3.5 text-primary" />
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <p className="text-sm font-semibold">{service.type}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {service.day} · {service.time}
-                    </p>
-                  </div>
+            {/* Icon Link Buttons */}
+            <div className="flex items-center gap-5">
+              <a
+                href={`https://${church.website}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Website"
+              >
+                <div className="flex items-center justify-center w-11 h-11 rounded-full border-2 border-border hover:border-primary transition-colors">
+                  <Globe className="w-5 h-5 text-foreground" />
                 </div>
+              </a>
+              <a
+                href={`https://maps.google.com?q=${encodeURIComponent(church.address)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Location"
+              >
+                <div className="flex items-center justify-center w-11 h-11 rounded-full border-2 border-border hover:border-primary transition-colors">
+                  <MapPin className="w-5 h-5 text-foreground" />
+                </div>
+              </a>
+              <div className="flex items-center justify-center w-11 h-11 rounded-full border-2 border-border">
+                <Facebook className="w-5 h-5 text-foreground" />
+              </div>
+            </div>
+
+            {/* Follow Alert */}
+            <Alert className="border-primary/20 bg-primary/5 text-primary w-full">
+              <Bell className="size-4" />
+              <AlertDescription className="text-primary/80">
+                Following this church will notify you about upcoming events and services.
+              </AlertDescription>
+            </Alert>
+
+            {/* Follow Button */}
+            <Button
+              variant="outline"
+              className="w-44 rounded-full font-semibold border-2 border-border text-foreground hover:bg-primary/5 hover:border-primary hover:text-primary transition-colors"
+            >
+              Follow
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Service Schedule */}
+      <section className="px-4 mb-5">
+        <h2 className="text-lg font-bold mb-3">Service Schedule</h2>
+
+        {Object.entries(servicesByDay).map(([day, services]) => (
+          <div key={day} className="mb-4">
+            <p className="text-sm font-semibold text-foreground mb-2">{day}</p>
+            <div className="space-y-2">
+              {services.slice(0, SHOW_PER_DAY).map((service) => (
+                <Card key={service.id} className="rounded-xl border-0 shadow-none">
+                  <CardContent className="px-4 py-3">
+                    <p className="text-sm font-semibold text-primary">{service.time}</p>
+                    <p className="text-sm font-bold text-foreground mt-0.5">{service.type}</p>
+                  </CardContent>
+                </Card>
               ))}
             </div>
-          </section>
+          </div>
+        ))}
 
-          {/* Contact Info */}
-          <section className="mb-5">
-            <h2 className="text-sm font-bold tracking-wide uppercase text-muted-foreground mb-2">
-              Contact
-            </h2>
-            <div className="rounded-2xl bg-white shadow-[4px_4px_10px_0px_#E8E8E866] divide-y divide-border overflow-hidden">
-              <div className="flex items-center gap-3 px-4 py-3">
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 shrink-0">
-                  <MapPin className="w-3.5 h-3.5 text-primary" />
-                </div>
-                <p className="text-sm text-foreground">{church.address}</p>
-              </div>
-              <div className="flex items-center gap-3 px-4 py-3">
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 shrink-0">
-                  <Phone className="w-3.5 h-3.5 text-primary" />
-                </div>
-                <p className="text-sm text-foreground">{church.phone}</p>
-              </div>
-              <div className="flex items-center gap-3 px-4 py-3">
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 shrink-0">
-                  <Globe className="w-3.5 h-3.5 text-primary" />
-                </div>
-                <p className="text-sm text-primary font-medium">{church.website}</p>
-              </div>
-            </div>
-          </section>
+        <button className="flex items-center gap-1 text-sm font-semibold text-primary mt-1">
+          See More <ChevronDown className="w-4 h-4" />
+        </button>
+      </section>
 
-          {/* Upcoming Events */}
-          <section className="mb-6">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-sm font-bold tracking-wide uppercase text-muted-foreground">
-                Events
-              </h2>
-              <span className="text-xs text-muted-foreground">
-                {upcomingEvents.length} upcoming
-              </span>
-            </div>
+      {/* Upcoming Events */}
+      <section className="px-4">
+        <h2 className="text-lg font-bold mb-3">Upcoming Events</h2>
 
-            {upcomingEvents.length === 0 ? (
-              <div className="rounded-2xl bg-white shadow-[4px_4px_10px_0px_#E8E8E866] p-6 flex flex-col items-center gap-2">
-                <CalendarDays className="w-8 h-8 text-muted-foreground/40" />
-                <p className="text-sm text-muted-foreground">No upcoming events</p>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {upcomingEvents.map((event) => (
-                  <Link key={event.id} href={`/events/${event.id}`}>
-                    <Card className="rounded-2xl border-0 bg-white py-0 shadow-[4px_4px_10px_0px_#E8E8E866]">
-                      <CardContent className="flex flex-col gap-1.5 p-4">
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-semibold text-primary uppercase tracking-wide">
-                            {event.datetime}
-                          </p>
-                          <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary whitespace-nowrap">
-                            {event.tag}
-                          </span>
-                        </div>
-                        <p className="text-base font-bold leading-snug">{event.title}</p>
-                        <p className="text-sm text-muted-foreground">{event.location}</p>
-                        <p className="text-sm text-muted-foreground">{event.host}</p>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </section>
-        </div>
-
-      {/* Bottom action bar */}
-      <div className="sticky bottom-0 z-10 px-4 py-4 bg-white shadow-[0px_-2px_31px_0px_#0000001A] flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Users className="w-4 h-4 shrink-0" />
-          <span>
-            <span className="font-semibold text-foreground">
-              {church.followers.toLocaleString()}
-            </span>{" "}
-            followers
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" className="h-11 px-5 rounded-xl font-semibold flex items-center gap-2">
-            <Mail className="w-4 h-4" />
-            Contact
-          </Button>
-          <Button className="h-11 px-6 rounded-xl font-semibold">
-            Follow
-          </Button>
-        </div>
-      </div>
+        {upcomingEvents.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 py-10">
+            <CalendarDays className="w-8 h-8 text-muted-foreground/40" />
+            <p className="text-sm text-muted-foreground">No upcoming events</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {upcomingEvents.map((event) => (
+              <Link key={event.id} href={`/events/${event.id}`}>
+                <Card className="rounded-xl border-0 shadow-none">
+                  <CardContent className="px-4 py-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-xs font-semibold text-primary uppercase tracking-wide">
+                        {event.datetime}
+                      </p>
+                      <button
+                        onClick={(e) => e.preventDefault()}
+                        className="text-muted-foreground hover:text-foreground"
+                        aria-label="Share"
+                      >
+                        <Share2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <p className="text-base font-bold leading-snug">{event.title}</p>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

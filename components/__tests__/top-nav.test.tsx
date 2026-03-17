@@ -96,10 +96,10 @@ describe('TopNav — home page', () => {
 })
 
 describe('TopNav — event detail page', () => {
-  it('shows "Event" back button instead of brand link', () => {
+  it('shows back button instead of brand link', () => {
     setupNavMocks({ pathname: '/events/evt-1', params: { id: 'evt-1' } })
     render(<TopNav />)
-    expect(screen.getByText('Event')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /back to home/i })).toBeInTheDocument()
     expect(screen.queryByText('1Another')).not.toBeInTheDocument()
   })
 
@@ -114,22 +114,22 @@ describe('TopNav — event detail page', () => {
   it('navigates to / when the back button is clicked on an event detail', async () => {
     setupNavMocks({ pathname: '/events/evt-1', params: { id: 'evt-1' } })
     render(<TopNav />)
-    await userEvent.click(screen.getByText('Event'))
+    await userEvent.click(screen.getByRole('button', { name: /back to home/i }))
     expect(mockPush).toHaveBeenCalledWith('/')
   })
 })
 
 describe('TopNav — church detail page', () => {
-  it('shows "Church" back button', () => {
+  it('shows back button on church detail page', () => {
     setupNavMocks({ pathname: '/churches/ch-1', params: { id: 'ch-1' } })
     render(<TopNav />)
-    expect(screen.getByText('Church')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /back to churches/i })).toBeInTheDocument()
   })
 
   it('navigates to /churches when back button is clicked', async () => {
     setupNavMocks({ pathname: '/churches/ch-1', params: { id: 'ch-1' } })
     render(<TopNav />)
-    await userEvent.click(screen.getByText('Church'))
+    await userEvent.click(screen.getByRole('button', { name: /back to churches/i }))
     expect(mockPush).toHaveBeenCalledWith('/churches')
   })
 })

@@ -45,14 +45,11 @@ function TopNavInner({ user }: TopNavProps) {
   const isChurchDetail = pathname.startsWith("/churches/") && id !== null;
   const isDetailPage = isEventDetail || isChurchDetail;
 
-  let detailTitle = "";
   let backHref = "/";
   if (isEventDetail) {
-    detailTitle = "Event";
     backHref = "/";
   }
   if (isChurchDetail) {
-    detailTitle = "Church";
     backHref = "/churches";
   }
 
@@ -77,10 +74,10 @@ function TopNavInner({ user }: TopNavProps) {
         {isDetailPage ? (
           <button
             onClick={() => router.push(backHref)}
-            className="flex items-center gap-1 text-primary-foreground"
+            className="flex items-center text-primary-foreground"
+            aria-label={isChurchDetail ? "Back to churches" : "Back to home"}
           >
-            <ChevronLeft className="w-5 h-5" />
-            <span className="text-sm font-semibold max-w-[200px] truncate">{detailTitle}</span>
+            <ChevronLeft className="w-6 h-6" />
           </button>
         ) : (
           <Link href="/" className="text-xl font-bold tracking-tight text-primary-foreground">
