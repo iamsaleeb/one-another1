@@ -82,8 +82,8 @@ export default async function ChurchDetailPage({ params }: Props) {
             </div>
 
             {/* Follow Alert */}
-            <Alert className="border-primary/20 bg-primary/5 text-primary w-full">
-              <Bell className="size-4" />
+            <Alert className="border-primary/20 bg-primary/5 text-primary">
+              <Bell />
               <AlertDescription className="text-primary/80">
                 Following this church will notify you about upcoming events and services.
               </AlertDescription>
