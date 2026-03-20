@@ -33,12 +33,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.role = (user as { role?: string }).role;
       }
       return token;
     },
     async session({ session, token }) {
       if (token.id && session.user) {
         session.user.id = token.id;
+      }
+      if (token.role && session.user) {
+        session.user.role = token.role;
       }
       return session;
     },
