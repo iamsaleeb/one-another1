@@ -81,7 +81,7 @@ export default async function EventDetailPage({ params }: Props) {
           <p className="text-xs text-muted-foreground">Cost</p>
           <p className="text-base font-bold">Free Event</p>
         </div>
-        <Button className="h-12 px-8 text-base font-semibold rounded-xl">
+        <Button>
           Register
         </Button>
       </div>

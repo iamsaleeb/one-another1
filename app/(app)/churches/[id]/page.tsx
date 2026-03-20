@@ -92,7 +92,6 @@ export default async function ChurchDetailPage({ params }: Props) {
             {/* Follow Button */}
             <Button
               variant="outline"
-              className="w-44 rounded-full font-semibold border-2 border-border text-foreground hover:bg-primary/5 hover:border-primary hover:text-primary transition-colors"
             >
               Follow
             </Button>
