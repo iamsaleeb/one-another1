@@ -5,15 +5,6 @@ import { EventCard } from "@/components/event-card";
 import { getEvents, getSeries, searchEventsAndChurches } from "@/lib/actions/data";
 import { PageHeader } from "@/components/ui/page-header";
 
-const CATEGORIES = [
-  { label: "Worship", emoji: "🎵" },
-  { label: "Prayer", emoji: "🙏" },
-  { label: "Youth", emoji: "⚡" },
-  { label: "Outreach", emoji: "🤝" },
-  { label: "Bible Study", emoji: "📖" },
-  { label: "Missions", emoji: "🌍" },
-] as const;
-
 const CADENCE_LABELS: Record<string, string> = {
   WEEKLY: "Weekly",
   BIWEEKLY: "Bi-weekly",
@@ -126,23 +117,6 @@ export default async function Home({
                 </div>
               </section>
             )}
-
-            <section className="flex flex-col gap-3">
-              <h2 className="text-base font-semibold">Browse by Category</h2>
-              <div className="grid grid-cols-3 gap-2">
-                {CATEGORIES.map((cat) => (
-                  <Card
-                    key={cat.label}
-                    className="rounded-2xl border-0 bg-muted/40 shadow-sm cursor-pointer"
-                  >
-                    <CardContent className="flex flex-col items-center justify-center gap-1.5 p-4">
-                      <span className="text-2xl">{cat.emoji}</span>
-                      <p className="text-xs font-medium text-center">{cat.label}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </section>
           </>
         )}
       </div>

@@ -5,6 +5,7 @@ import type { getChurchById } from "@/lib/actions/data";
 import { AboutTab } from "./about-tab";
 import { EventsTab } from "./events-tab";
 import { ServicesTab } from "./services-tab";
+import { SeriesTab } from "./series-tab";
 
 type ChurchWithDetails = NonNullable<Awaited<ReturnType<typeof getChurchById>>>;
 
@@ -20,6 +21,7 @@ export function ChurchTabs({ church }: ChurchTabsProps) {
           <TabsTrigger value="about">About</TabsTrigger>
           <TabsTrigger value="services">Services</TabsTrigger>
           <TabsTrigger value="events">Events</TabsTrigger>
+          <TabsTrigger value="series">Series</TabsTrigger>
         </TabsList>
       </div>
 
@@ -34,6 +36,10 @@ export function ChurchTabs({ church }: ChurchTabsProps) {
 
         <TabsContent value="events">
           <EventsTab events={church.events} />
+        </TabsContent>
+
+        <TabsContent value="series">
+          <SeriesTab series={church.series} />
         </TabsContent>
       </div>
     </Tabs>

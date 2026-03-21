@@ -140,6 +140,12 @@ describe('getChurchById', () => {
       include: {
         serviceTimes: true,
         events: { where: { isPast: false } },
+        series: {
+          orderBy: { createdAt: 'desc' },
+          include: {
+            _count: { select: { events: { where: { isPast: false } } } },
+          },
+        },
       },
     })
   })
