@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { EventCard } from "@/components/event-card";
 import { getEvents, getPastEvents } from "@/lib/actions/data";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default async function MyEventsPage() {
   const [upcomingEvents, pastEvents] = await Promise.all([
@@ -11,17 +12,15 @@ export default async function MyEventsPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="flex items-center justify-between px-4 pt-5 pb-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">My Events</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {upcomingEvents.length} upcoming
-          </p>
-        </div>
-        <Button size="icon" className="rounded-full size-9">
-          <Plus className="size-4" />
-        </Button>
-      </header>
+      <PageHeader
+        title="My Events"
+        description={`${upcomingEvents.length} upcoming`}
+        actions={
+          <Button size="icon" className="rounded-full size-9">
+            <Plus className="size-4" />
+          </Button>
+        }
+      />
 
       <div className="flex flex-col gap-6 px-4 py-2">
         {/* Upcoming */}

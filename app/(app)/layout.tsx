@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { BottomNav } from "@/components/bottom-nav";
 import { TopNav } from "@/components/top-nav";
 import { CreateEventFAB } from "@/components/create-event-fab";
+import { UserRole } from "@prisma/client";
 
 export default async function AppLayout({
   children,
@@ -9,7 +10,7 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
-  const isOrganiser = session?.user?.role === "ORGANISER";
+  const isOrganiser = session?.user?.role === UserRole.ORGANISER;
 
   return (
     <div className="min-h-screen">

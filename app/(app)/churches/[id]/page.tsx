@@ -27,7 +27,7 @@ export default async function ChurchDetailPage({ params }: Props) {
     <div className="bg-muted/20 min-h-screen pb-8">
       {/* Church Info Card */}
       <div className="px-4 pt-5 pb-3">
-        <Card className="rounded-2xl border-0 shadow-none overflow-hidden" style={{ backgroundColor: "#F3614D0D" }}>
+        <Card className="rounded-2xl border-0 shadow-none overflow-hidden bg-primary/5">
           <CardContent className="flex flex-col items-center gap-4 pt-6 pb-5 px-5">
             {/* Circular Avatar */}
             <Avatar className="size-24 ring-4 ring-primary/10">

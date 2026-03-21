@@ -2,11 +2,12 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { CreateEventForm } from "./_components/create-event-form";
+import { UserRole } from "@prisma/client";
 
 export default async function CreateEventPage() {
   const session = await auth();
 
-  if (session?.user?.role !== "ORGANISER") {
+  if (session?.user?.role !== UserRole.ORGANISER) {
     redirect("/");
   }
 
@@ -18,7 +19,7 @@ export default async function CreateEventPage() {
   return (
     <div className="mx-auto max-w-lg px-4 py-6">
       <h1 className="mb-6 text-2xl font-bold">Create Event</h1>
-      <div className="rounded-2xl bg-white shadow-[4px_4px_10px_0px_#E8E8E866] p-5">
+      <div className="rounded-2xl bg-white shadow-card p-5">
         <CreateEventForm churches={churches} />
       </div>
     </div>

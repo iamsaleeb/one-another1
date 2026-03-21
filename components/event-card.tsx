@@ -15,7 +15,7 @@ interface EventCardProps {
 export function EventCard({ event }: EventCardProps) {
   return (
     <Link href={`/events/${event.id}`}>
-      <Card className="rounded-2xl border-0 bg-white py-0 shadow-[4px_4px_10px_0px_#E8E8E866]">
+      <Card className="rounded-2xl border-0 bg-white py-0 shadow-card">
         <CardContent className="flex flex-col gap-1.5 p-4">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold text-primary uppercase tracking-wide">

@@ -7,21 +7,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, X, ChevronLeft } from "lucide-react";
+import { getInitials } from "@/lib/utils";
+import { useIsDetailPage } from "@/lib/hooks/use-is-detail-page";
 
 interface TopNavUser {
   name?: string | null;
   email?: string | null;
   image?: string | null;
-}
-
-function getInitials(user?: TopNavUser): string {
-  if (user?.name) {
-    const parts = user.name.trim().split(/\s+/);
-    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    return user.name.slice(0, 2).toUpperCase();
-  }
-  if (user?.email) return user.email[0].toUpperCase();
-  return "?";
 }
 
 interface TopNavProps {
@@ -40,10 +32,10 @@ function TopNavInner({ user }: TopNavProps) {
     setQuery(urlQuery);
   }, [urlQuery]);
 
+  const isDetailPage = useIsDetailPage();
   const id = params?.id ?? null;
   const isEventDetail = pathname.startsWith("/events/") && id !== null;
   const isChurchDetail = pathname.startsWith("/churches/") && id !== null;
-  const isDetailPage = isEventDetail || isChurchDetail;
 
   let backHref = "/";
   if (isEventDetail) {
@@ -90,7 +82,7 @@ function TopNavInner({ user }: TopNavProps) {
               <Avatar className="size-8">
                 <AvatarImage src={user?.image ?? ""} alt={user?.name ?? "Profile"} />
                 <AvatarFallback className="text-xs font-semibold bg-primary-foreground/20 text-primary-foreground">
-                  {getInitials(user)}
+                  {getInitials(user?.name, user?.email)}
                 </AvatarFallback>
               </Avatar>
             </span>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Church } from "lucide-react";
 import { getChurches } from "@/lib/actions/data";
+import { PageHeader } from "@/components/ui/page-header";
 
 const gradients = [
   "from-rose-800 via-rose-600 to-orange-400",
@@ -16,12 +17,7 @@ export default async function ChurchesPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="px-4 pt-5 pb-4">
-        <h1 className="text-2xl font-bold tracking-tight">Churches</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          {churches.length} churches in your area
-        </p>
-      </header>
+      <PageHeader title="Churches" description={`${churches.length} churches in your area`} />
 
       <div className="grid grid-cols-2 gap-3 px-4 py-2 pb-24">
         {churches.map((church, i) => (

@@ -1,17 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { Plus } from "lucide-react";
+import { useIsDetailPage } from "@/lib/hooks/use-is-detail-page";
 
 export function CreateEventFAB({ isOrganiser }: { isOrganiser: boolean }) {
-  const pathname = usePathname();
+  const isDetailPage = useIsDetailPage();
 
-  if (
-    !isOrganiser ||
-    pathname.startsWith("/events/") ||
-    pathname.startsWith("/churches/")
-  ) {
+  if (!isOrganiser || isDetailPage) {
     return null;
   }
 

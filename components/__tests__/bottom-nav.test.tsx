@@ -3,15 +3,18 @@ import { BottomNav } from '@/components/bottom-nav'
 
 jest.mock('next/navigation', () => ({
   usePathname: jest.fn(),
+  useParams: jest.fn(),
 }))
 
-import { usePathname } from 'next/navigation'
+import { usePathname, useParams } from 'next/navigation'
 
 const mockUsePathname = usePathname as jest.Mock
+const mockUseParams = useParams as jest.Mock
 
 describe('BottomNav', () => {
   beforeEach(() => {
     mockUsePathname.mockReturnValue('/')
+    mockUseParams.mockReturnValue({})
   })
 
   it('renders all three navigation tabs', () => {
@@ -32,12 +35,14 @@ describe('BottomNav', () => {
 
   it('returns null on an event detail page', () => {
     mockUsePathname.mockReturnValue('/events/evt-123')
+    mockUseParams.mockReturnValue({ id: 'evt-123' })
     const { container } = render(<BottomNav />)
     expect(container.firstChild).toBeNull()
   })
 
   it('returns null on a church detail page', () => {
     mockUsePathname.mockReturnValue('/churches/ch-456')
+    mockUseParams.mockReturnValue({ id: 'ch-456' })
     const { container } = render(<BottomNav />)
     expect(container.firstChild).toBeNull()
   })

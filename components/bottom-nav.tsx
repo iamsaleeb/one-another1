@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Church, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useIsDetailPage } from "@/lib/hooks/use-is-detail-page";
 
 const tabs = [
   { label: "Home", href: "/", icon: Home },
@@ -13,8 +14,9 @@ const tabs = [
 
 export function BottomNav() {
   const pathname = usePathname();
+  const isDetailPage = useIsDetailPage();
 
-  if (pathname.startsWith("/events/") || pathname.startsWith("/churches/")) return null;
+  if (isDetailPage) return null;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-[0px_-2px_31px_0px_#0000001A]">

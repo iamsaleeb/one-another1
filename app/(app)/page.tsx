@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, SearchX } from "lucide-react";
 import { EventCard } from "@/components/event-card";
 import { getEvents, searchEventsAndChurches } from "@/lib/actions/data";
+import { PageHeader } from "@/components/ui/page-header";
 
 const CATEGORIES = [
   { label: "Worship", emoji: "🎵" },
@@ -32,18 +33,10 @@ export default async function Home({
 
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="px-4 pt-5 pb-4">
-        {query ? (
-          <>
-            <h1 className="text-2xl font-bold tracking-tight">Results</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Showing results for &ldquo;{q}&rdquo;
-            </p>
-          </>
-        ) : (
-          <h1 className="text-2xl font-bold tracking-tight">Home</h1>
-        )}
-      </header>
+      <PageHeader
+        title={query ? "Results" : "Home"}
+        description={query ? `Showing results for "${q}"` : undefined}
+      />
 
       <div className="flex flex-col gap-6 px-4 py-2">
         {query ? (
@@ -76,7 +69,7 @@ export default async function Home({
                   </h2>
                   {filteredChurches.map((church) => (
                     <Link key={church.id} href={`/churches/${church.id}`}>
-                      <Card className="rounded-2xl border-0 bg-white py-0 shadow-[4px_4px_10px_0px_#E8E8E866]">
+                      <Card className="rounded-2xl border-0 bg-white py-0 shadow-card">
                         <CardContent className="flex items-center justify-between p-4">
                           <div className="flex flex-col gap-1">
                             <p className="text-sm font-bold">{church.name}</p>

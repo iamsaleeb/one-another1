@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { authConfig } from "./auth.config";
 import { loginSchema } from "@/lib/validations/auth";
+import { UserRole } from "@prisma/client";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -33,7 +34,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = (user as { role?: string }).role;
+        token.role = (user as { role?: UserRole }).role;
       }
       return token;
     },

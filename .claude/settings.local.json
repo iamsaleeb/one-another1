@@ -19,7 +19,11 @@
       "mcp__context7__resolve-library-id",
       "mcp__context7__query-docs",
       "Bash(mkdir:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(xargs grep:*)",
+      "Bash(grep -E \"className=\"\"[^\"\"]{30,}\")",
+      "Bash(grep:*)",
+      "Bash(npm test:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
