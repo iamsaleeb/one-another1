@@ -36,6 +36,7 @@ function TopNavInner({ user }: TopNavProps) {
   const id = params?.id ?? null;
   const isEventDetail = pathname.startsWith("/events/") && id !== null;
   const isChurchDetail = pathname.startsWith("/churches/") && id !== null;
+  const isSeriesDetail = pathname.startsWith("/series/") && id !== null;
 
   let backHref = "/";
   if (isEventDetail) {
@@ -43,6 +44,9 @@ function TopNavInner({ user }: TopNavProps) {
   }
   if (isChurchDetail) {
     backHref = "/churches";
+  }
+  if (isSeriesDetail) {
+    backHref = "/series";
   }
 
   function handleSearch(e: React.FormEvent) {
@@ -67,7 +71,7 @@ function TopNavInner({ user }: TopNavProps) {
           <button
             onClick={() => router.push(backHref)}
             className="flex items-center text-primary-foreground"
-            aria-label={isChurchDetail ? "Back to churches" : "Back to home"}
+            aria-label={isChurchDetail ? "Back to churches" : isSeriesDetail ? "Back to series" : "Back to home"}
           >
             <ChevronLeft className="w-6 h-6" />
           </button>

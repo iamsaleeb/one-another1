@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { Calendar, MapPin, User } from "lucide-react";
+import Link from "next/link";
+import { Calendar, MapPin, Repeat, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getEventById } from "@/lib/actions/data";
 import { InfoField } from "@/components/ui/info-field";
@@ -35,6 +36,13 @@ export default async function EventDetailPage({ params }: Props) {
             <InfoField icon={User} label="Host">{event.host}</InfoField>
             <InfoField icon={Calendar} label="Date & Time">{event.datetime}</InfoField>
             <InfoField icon={MapPin} label="Location">{event.location}</InfoField>
+            {event.series && (
+              <InfoField icon={Repeat} label="Part of Series">
+                <Link href={`/series/${event.series.id}`} className="text-primary hover:underline">
+                  {event.series.name}
+                </Link>
+              </InfoField>
+            )}
           </div>
         </div>
 

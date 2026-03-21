@@ -1,0 +1,71 @@
+import { notFound } from "next/navigation";
+import { MapPin, Tag, User } from "lucide-react";
+import { getSeriesById } from "@/lib/actions/data";
+import { InfoField } from "@/components/ui/info-field";
+import { HeroBanner } from "@/components/ui/hero-banner";
+import { EventCard } from "@/components/event-card";
+
+interface Props {
+  params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: Props) {
+  const { id } = await params;
+  const series = await getSeriesById(id);
+  return { title: series ? `${series.name} — One Another` : "Series Not Found" };
+}
+
+const CADENCE_LABELS: Record<string, string> = {
+  WEEKLY: "Weekly",
+  BIWEEKLY: "Bi-weekly",
+  MONTHLY: "Monthly",
+  CUSTOM: "Custom",
+};
+
+export default async function SeriesDetailPage({ params }: Props) {
+  const { id } = await params;
+  const series = await getSeriesById(id);
+
+  if (!series) notFound();
+
+  return (
+    <div className="bg-background">
+      <HeroBanner size="sm" />
+
+      <div className="flex flex-col gap-4 px-4 pt-5 pb-6">
+        {/* Info card */}
+        <div className="rounded-2xl bg-white shadow-card p-5 flex flex-col gap-4">
+          <div className="flex items-start justify-between gap-2">
+            <h1 className="text-xl font-bold leading-snug">{series.name}</h1>
+            <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary whitespace-nowrap shrink-0">
+              {CADENCE_LABELS[series.cadence] ?? series.cadence}
+            </span>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <InfoField icon={MapPin} label="Location">{series.location}</InfoField>
+            <InfoField icon={User} label="Host">{series.host}</InfoField>
+            <InfoField icon={Tag} label="Category">{series.tag}</InfoField>
+          </div>
+        </div>
+
+        {/* Description card */}
+        <div className="rounded-2xl bg-white shadow-card p-5">
+          <p className="text-sm text-foreground leading-relaxed">{series.description}</p>
+        </div>
+
+        {/* Upcoming sessions */}
+        <section className="flex flex-col gap-3">
+          <h2 className="text-base font-semibold">Upcoming Sessions</h2>
+          {series.events.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">No upcoming sessions</p>
+          ) : (
+            series.events.map((event) => (
+              <EventCard key={event.id} event={{ ...event, seriesName: null }} />
+            ))
+          )}
+        </section>
+      </div>
+    </div>
+  );
+}

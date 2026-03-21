@@ -5,14 +5,9 @@ jest.mock('react', () => ({
 
 jest.mock('@/lib/db', () => ({
   prisma: {
-    event: {
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-    },
-    church: {
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-    },
+    event: { findMany: jest.fn(), findUnique: jest.fn() },
+    church: { findMany: jest.fn(), findUnique: jest.fn() },
+    series: { findMany: jest.fn(), findUnique: jest.fn() },
   },
 }))
 
@@ -23,6 +18,9 @@ import {
   getChurches,
   getChurchById,
   searchEventsAndChurches,
+  getSeries,
+  getSeriesById,
+  getSeriesByChurchId,
 } from '@/lib/actions/data'
 import { prisma } from '@/lib/db'
 
@@ -30,6 +28,8 @@ const mockEventFindMany = prisma.event.findMany as jest.Mock
 const mockEventFindUnique = prisma.event.findUnique as jest.Mock
 const mockChurchFindMany = prisma.church.findMany as jest.Mock
 const mockChurchFindUnique = prisma.church.findUnique as jest.Mock
+const mockSeriesFindMany = prisma.series.findMany as jest.Mock
+const mockSeriesFindUnique = prisma.series.findUnique as jest.Mock
 
 const sampleEvent = {
   id: 'evt-1',
@@ -51,6 +51,17 @@ const sampleChurch = {
   events: [],
 }
 
+const sampleSeries = {
+  id: 'ser-1',
+  name: 'Bible Study Series',
+  description: 'Weekly Bible study',
+  cadence: 'WEEKLY',
+  location: 'Room 101',
+  host: 'Pastor John',
+  tag: 'Bible Study',
+  churchId: 'ch-1',
+}
+
 beforeEach(() => {
   jest.clearAllMocks()
 })
@@ -63,6 +74,7 @@ describe('getEvents', () => {
     expect(mockEventFindMany).toHaveBeenCalledWith({
       where: { isPast: false },
       orderBy: { createdAt: 'asc' },
+      include: { series: { select: { name: true } } },
     })
   })
 
@@ -81,6 +93,7 @@ describe('getPastEvents', () => {
     expect(mockEventFindMany).toHaveBeenCalledWith({
       where: { isPast: true },
       orderBy: { createdAt: 'asc' },
+      include: { series: { select: { name: true } } },
     })
   })
 })
@@ -90,7 +103,10 @@ describe('getEventById', () => {
     mockEventFindUnique.mockResolvedValue(sampleEvent)
     const result = await getEventById('evt-1')
     expect(result).toEqual(sampleEvent)
-    expect(mockEventFindUnique).toHaveBeenCalledWith({ where: { id: 'evt-1' } })
+    expect(mockEventFindUnique).toHaveBeenCalledWith({
+      where: { id: 'evt-1' },
+      include: { series: { select: { id: true, name: true } } },
+    })
   })
 
   it('returns null when the event does not exist', async () => {
@@ -160,6 +176,7 @@ describe('searchEventsAndChurches', () => {
           { tag: { contains: 'worship', mode: 'insensitive' } },
         ],
       },
+      include: { series: { select: { name: true } } },
     })
   })
 
@@ -188,5 +205,84 @@ describe('searchEventsAndChurches', () => {
       events: [],
       churches: [],
     })
+  })
+})
+
+describe('getSeries', () => {
+  it('returns all series ordered by createdAt desc with event count', async () => {
+    const seriesWithCount = { ...sampleSeries, _count: { events: 3 } }
+    mockSeriesFindMany.mockResolvedValue([seriesWithCount])
+
+    const result = await getSeries()
+
+    expect(result).toEqual([seriesWithCount])
+    expect(mockSeriesFindMany).toHaveBeenCalledWith({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        _count: {
+          select: { events: { where: { isPast: false } } },
+        },
+      },
+    })
+  })
+
+  it('returns empty array when no series exist', async () => {
+    mockSeriesFindMany.mockResolvedValue([])
+    expect(await getSeries()).toEqual([])
+  })
+})
+
+describe('getSeriesById', () => {
+  it('returns the matching series with church and upcoming events', async () => {
+    const fullSeries = {
+      ...sampleSeries,
+      church: { id: 'ch-1', name: 'Grace Church' },
+      events: [sampleEvent],
+    }
+    mockSeriesFindUnique.mockResolvedValue(fullSeries)
+
+    const result = await getSeriesById('ser-1')
+
+    expect(result).toEqual(fullSeries)
+    expect(mockSeriesFindUnique).toHaveBeenCalledWith({
+      where: { id: 'ser-1' },
+      include: {
+        church: { select: { id: true, name: true } },
+        events: {
+          where: { isPast: false },
+          orderBy: { datetime: 'asc' },
+        },
+      },
+    })
+  })
+
+  it('returns null when series does not exist', async () => {
+    mockSeriesFindUnique.mockResolvedValue(null)
+    expect(await getSeriesById('not-found')).toBeNull()
+  })
+})
+
+describe('getSeriesByChurchId', () => {
+  it('returns series for the given church with event count', async () => {
+    const seriesWithCount = { ...sampleSeries, _count: { events: 2 } }
+    mockSeriesFindMany.mockResolvedValue([seriesWithCount])
+
+    const result = await getSeriesByChurchId('ch-1')
+
+    expect(result).toEqual([seriesWithCount])
+    expect(mockSeriesFindMany).toHaveBeenCalledWith({
+      where: { churchId: 'ch-1' },
+      include: {
+        _count: {
+          select: { events: { where: { isPast: false } } },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+  })
+
+  it('returns empty array when church has no series', async () => {
+    mockSeriesFindMany.mockResolvedValue([])
+    expect(await getSeriesByChurchId('ch-none')).toEqual([])
   })
 })

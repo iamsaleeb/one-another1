@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Repeat } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface EventCardProps {
@@ -9,6 +10,7 @@ interface EventCardProps {
     location: string;
     host: string;
     tag: string;
+    seriesName?: string | null;
   };
 }
 
@@ -26,6 +28,12 @@ export function EventCard({ event }: EventCardProps) {
             </span>
           </div>
           <p className="text-base font-bold leading-snug">{event.title}</p>
+          {event.seriesName && (
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <Repeat className="size-3 shrink-0" />
+              {event.seriesName}
+            </p>
+          )}
           <p className="text-sm text-muted-foreground">{event.location}</p>
           <p className="text-sm text-muted-foreground">{event.host}</p>
         </CardContent>

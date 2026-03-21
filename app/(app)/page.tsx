@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, SearchX } from "lucide-react";
 import { EventCard } from "@/components/event-card";
-import { getEvents, searchEventsAndChurches } from "@/lib/actions/data";
+import { getEvents, getSeries, searchEventsAndChurches } from "@/lib/actions/data";
 import { PageHeader } from "@/components/ui/page-header";
 
 const CATEGORIES = [
@@ -14,6 +14,13 @@ const CATEGORIES = [
   { label: "Missions", emoji: "🌍" },
 ] as const;
 
+const CADENCE_LABELS: Record<string, string> = {
+  WEEKLY: "Weekly",
+  BIWEEKLY: "Bi-weekly",
+  MONTHLY: "Monthly",
+  CUSTOM: "Custom",
+};
+
 export default async function Home({
   searchParams,
 }: {
@@ -22,9 +29,10 @@ export default async function Home({
   const { q } = await searchParams;
   const query = q?.trim() ?? "";
 
-  const [searchResults, allEvents] = await Promise.all([
+  const [searchResults, allEvents, allSeries] = await Promise.all([
     query ? searchEventsAndChurches(query) : null,
     query ? null : getEvents(),
+    query ? null : getSeries(),
   ]);
 
   const filteredEvents = searchResults?.events ?? null;
@@ -56,7 +64,7 @@ export default async function Home({
                     <span className="text-sm font-normal text-muted-foreground">({filteredEvents.length})</span>
                   </h2>
                   {filteredEvents.map((event) => (
-                    <EventCard key={event.id} event={event} />
+                    <EventCard key={event.id} event={{ ...event, seriesName: event.series?.name }} />
                   ))}
                 </section>
               )}
@@ -95,9 +103,29 @@ export default async function Home({
             <section className="flex flex-col gap-3">
               <h2 className="text-base font-semibold">Upcoming Events</h2>
               {allEvents?.map((item) => (
-                <EventCard key={item.id} event={item} />
+                <EventCard key={item.id} event={{ ...item, seriesName: item.series?.name }} />
               ))}
             </section>
+
+            {allSeries && allSeries.length > 0 && (
+              <section className="flex flex-col gap-3">
+                <h2 className="text-base font-semibold">Series</h2>
+                <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
+                  {allSeries.map((s) => (
+                    <Link
+                      key={s.id}
+                      href={`/series/${s.id}`}
+                      className="flex items-center gap-1.5 shrink-0 rounded-full bg-white shadow-card px-3 py-2 text-sm font-medium"
+                    >
+                      {s.name}
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                        {CADENCE_LABELS[s.cadence] ?? s.cadence}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
 
             <section className="flex flex-col gap-3">
               <h2 className="text-base font-semibold">Browse by Category</h2>

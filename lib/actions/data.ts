@@ -5,6 +5,7 @@ export const getEvents = cache(async function getEvents() {
   return prisma.event.findMany({
     where: { isPast: false },
     orderBy: { createdAt: "asc" },
+    include: { series: { select: { name: true } } },
   });
 });
 
@@ -12,12 +13,14 @@ export const getPastEvents = cache(async function getPastEvents() {
   return prisma.event.findMany({
     where: { isPast: true },
     orderBy: { createdAt: "asc" },
+    include: { series: { select: { name: true } } },
   });
 });
 
 export const getEventById = cache(async function getEventById(id: string) {
   return prisma.event.findUnique({
     where: { id },
+    include: { series: { select: { id: true, name: true } } },
   });
 });
 
@@ -53,6 +56,7 @@ export async function searchEventsAndChurches(query: string) {
           { tag: { contains: query, mode: "insensitive" } },
         ],
       },
+      include: { series: { select: { name: true } } },
     }),
     prisma.church.findMany({
       where: {
@@ -67,3 +71,39 @@ export async function searchEventsAndChurches(query: string) {
 
   return { events, churches };
 }
+
+export const getSeries = cache(async function getSeries() {
+  return prisma.series.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      _count: {
+        select: { events: { where: { isPast: false } } },
+      },
+    },
+  });
+});
+
+export const getSeriesById = cache(async function getSeriesById(id: string) {
+  return prisma.series.findUnique({
+    where: { id },
+    include: {
+      church: { select: { id: true, name: true } },
+      events: {
+        where: { isPast: false },
+        orderBy: { datetime: "asc" },
+      },
+    },
+  });
+});
+
+export const getSeriesByChurchId = cache(async function getSeriesByChurchId(churchId: string) {
+  return prisma.series.findMany({
+    where: { churchId },
+    include: {
+      _count: {
+        select: { events: { where: { isPast: false } } },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+});
