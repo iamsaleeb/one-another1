@@ -37,15 +37,17 @@ function TopNavInner({ user }: TopNavProps) {
   const isEventDetail = pathname.startsWith("/events/") && id !== null;
   const isChurchDetail = pathname.startsWith("/churches/") && id !== null;
   const isSeriesDetail = pathname.startsWith("/series/") && id !== null;
+  const isEventCreate = pathname === "/events/create";
+  const isSeriesCreate = pathname === "/series/create";
 
   let backHref = "/";
-  if (isEventDetail) {
+  if (isEventDetail || isEventCreate) {
     backHref = "/";
   }
   if (isChurchDetail) {
     backHref = "/churches";
   }
-  if (isSeriesDetail) {
+  if (isSeriesDetail || isSeriesCreate) {
     backHref = "/series";
   }
 
