@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { MapPin, Plus, Tag, User } from "lucide-react";
+import { MapPin, Pencil, Plus, Tag, User } from "lucide-react";
 import { auth } from "@/auth";
 import { UserRole } from "@prisma/client";
 import { getSeriesById } from "@/lib/actions/data";
@@ -8,6 +8,7 @@ import { InfoField } from "@/components/ui/info-field";
 import { HeroBanner } from "@/components/ui/hero-banner";
 import { EventCard } from "@/components/event-card";
 import { Button } from "@/components/ui/button";
+import { DeleteSeriesButton } from "./_components/delete-series-button";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -43,9 +44,21 @@ export default async function SeriesDetailPage({ params }: Props) {
         <div className="rounded-2xl bg-white shadow-card p-5 flex flex-col gap-4">
           <div className="flex items-start justify-between gap-2">
             <h1 className="text-xl font-bold leading-snug">{series.name}</h1>
-            <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary whitespace-nowrap shrink-0">
-              {CADENCE_LABELS[series.cadence] ?? series.cadence}
-            </span>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary whitespace-nowrap">
+                {CADENCE_LABELS[series.cadence] ?? series.cadence}
+              </span>
+              {isOrganiser && (
+                <>
+                  <Button asChild variant="outline" size="icon" className="size-9">
+                    <Link href={`/series/${series.id}/edit`}>
+                      <Pencil className="size-4" />
+                    </Link>
+                  </Button>
+                  <DeleteSeriesButton seriesId={series.id} />
+                </>
+              )}
+            </div>
           </div>
 
           <div className="flex flex-col gap-4">

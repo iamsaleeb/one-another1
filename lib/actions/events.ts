@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
+import { UserRole } from "@prisma/client";
 import { createEventSchema } from "@/lib/validations/event";
 
 export interface CreateEventState {
@@ -54,4 +55,57 @@ export async function createEventAction(
   });
 
   redirect(seriesId ? `/series/${seriesId}` : "/my-events");
+}
+
+export async function updateEventAction(
+  id: string,
+  _prevState: CreateEventState,
+  formData: FormData
+): Promise<CreateEventState> {
+  const session = await auth();
+  if (session?.user?.role !== UserRole.ORGANISER) redirect("/");
+
+  const raw = {
+    title: formData.get("title"),
+    date: formData.get("date"),
+    time: formData.get("time"),
+    location: formData.get("location"),
+    host: formData.get("host"),
+    tag: formData.get("tag"),
+    description: formData.get("description"),
+    churchId: formData.get("churchId") || undefined,
+    seriesId: formData.get("seriesId") || undefined,
+  };
+
+  const parsed = createEventSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  }
+
+  const { title, date, time, location, host, tag, description, churchId, seriesId } = parsed.data;
+  const datetime = `${date}T${time}`;
+
+  await prisma.event.update({
+    where: { id },
+    data: {
+      title,
+      datetime,
+      location,
+      host,
+      tag,
+      description,
+      churchId: churchId ?? null,
+      seriesId: seriesId ?? null,
+    },
+  });
+
+  redirect(`/events/${id}`);
+}
+
+export async function deleteEventAction(id: string): Promise<void> {
+  const session = await auth();
+  if (session?.user?.role !== UserRole.ORGANISER) redirect("/");
+
+  await prisma.event.delete({ where: { id } });
+  redirect("/organiser");
 }

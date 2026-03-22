@@ -1,10 +1,13 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Calendar, MapPin, Repeat, User } from "lucide-react";
+import { Calendar, MapPin, Pencil, Repeat, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { auth } from "@/auth";
+import { UserRole } from "@prisma/client";
 import { getEventById } from "@/lib/actions/data";
 import { InfoField } from "@/components/ui/info-field";
 import { HeroBanner } from "@/components/ui/hero-banner";
+import { DeleteEventButton } from "./_components/delete-event-button";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -18,9 +21,11 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function EventDetailPage({ params }: Props) {
   const { id } = await params;
-  const event = await getEventById(id);
+  const [event, session] = await Promise.all([getEventById(id), auth()]);
 
   if (!event) notFound();
+
+  const isOrganiser = session?.user?.role === UserRole.ORGANISER;
 
   return (
     <div className="bg-background">
@@ -30,7 +35,19 @@ export default async function EventDetailPage({ params }: Props) {
       <div className="flex flex-col gap-4 px-4 pt-5 pb-28">
         {/* Info card */}
         <div className="rounded-2xl bg-white shadow-card p-5 flex flex-col gap-4">
-          <h1 className="text-xl font-bold leading-snug">{event.title}</h1>
+          <div className="flex items-start justify-between gap-2">
+            <h1 className="text-xl font-bold leading-snug">{event.title}</h1>
+            {isOrganiser && (
+              <div className="flex items-center gap-2 shrink-0">
+                <Button asChild variant="outline" size="icon" className="size-9">
+                  <Link href={`/events/${id}/edit`}>
+                    <Pencil className="size-4" />
+                  </Link>
+                </Button>
+                <DeleteEventButton eventId={id} />
+              </div>
+            )}
+          </div>
 
           <div className="flex flex-col gap-4">
             <InfoField icon={User} label="Host">{event.host}</InfoField>
