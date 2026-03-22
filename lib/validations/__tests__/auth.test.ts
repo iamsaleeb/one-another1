@@ -11,23 +11,29 @@ describe('loginSchema', () => {
   it('rejects a missing email', () => {
     const result = loginSchema.safeParse({ ...valid, email: '' })
     expect(result.success).toBe(false)
-    expect(z.flattenError(result.error!).fieldErrors.email).toBeDefined()
+    if (!result.success) {
+      expect(z.flattenError(result.error).fieldErrors.email).toBeDefined()
+    }
   })
 
   it('rejects an invalid email format', () => {
     const result = loginSchema.safeParse({ ...valid, email: 'not-an-email' })
     expect(result.success).toBe(false)
-    expect(z.flattenError(result.error!).fieldErrors.email).toContain(
-      'Invalid email address'
-    )
+    if (!result.success) {
+      expect(z.flattenError(result.error).fieldErrors.email).toContain(
+        'Invalid email address'
+      )
+    }
   })
 
   it('rejects an empty password', () => {
     const result = loginSchema.safeParse({ ...valid, password: '' })
     expect(result.success).toBe(false)
-    expect(z.flattenError(result.error!).fieldErrors.password).toContain(
-      'Password is required'
-    )
+    if (!result.success) {
+      expect(z.flattenError(result.error).fieldErrors.password).toContain(
+        'Password is required'
+      )
+    }
   })
 
   it('accepts any non-empty password (no length requirement on login)', () => {
@@ -52,9 +58,11 @@ describe('registerSchema', () => {
   it('rejects a name shorter than 2 characters', () => {
     const result = registerSchema.safeParse({ ...valid, name: 'J' })
     expect(result.success).toBe(false)
-    expect(z.flattenError(result.error!).fieldErrors.name).toContain(
-      'Name must be at least 2 characters'
-    )
+    if (!result.success) {
+      expect(z.flattenError(result.error).fieldErrors.name).toContain(
+        'Name must be at least 2 characters'
+      )
+    }
   })
 
   it('accepts a name with exactly 2 characters', () => {
@@ -66,9 +74,11 @@ describe('registerSchema', () => {
   it('rejects an invalid email', () => {
     const result = registerSchema.safeParse({ ...valid, email: 'bad-email' })
     expect(result.success).toBe(false)
-    expect(z.flattenError(result.error!).fieldErrors.email).toContain(
-      'Invalid email address'
-    )
+    if (!result.success) {
+      expect(z.flattenError(result.error).fieldErrors.email).toContain(
+        'Invalid email address'
+      )
+    }
   })
 
   it('rejects a password shorter than 8 characters', () => {
@@ -78,9 +88,11 @@ describe('registerSchema', () => {
       confirmPassword: 'short',
     })
     expect(result.success).toBe(false)
-    expect(z.flattenError(result.error!).fieldErrors.password).toContain(
-      'Password must be at least 8 characters'
-    )
+    if (!result.success) {
+      expect(z.flattenError(result.error).fieldErrors.password).toContain(
+        'Password must be at least 8 characters'
+      )
+    }
   })
 
   it('rejects mismatched passwords', () => {
@@ -89,9 +101,11 @@ describe('registerSchema', () => {
       confirmPassword: 'differentpass',
     })
     expect(result.success).toBe(false)
-    expect(z.flattenError(result.error!).fieldErrors.confirmPassword).toContain(
-      'Passwords do not match'
-    )
+    if (!result.success) {
+      expect(z.flattenError(result.error).fieldErrors.confirmPassword).toContain(
+        'Passwords do not match'
+      )
+    }
   })
 
   it('accepts passwords that are exactly 8 characters', () => {
