@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { createSeriesSchema, type CreateSeriesState } from "@/lib/validations/series";
 
@@ -20,7 +21,7 @@ export async function createSeriesAction(
 
   const parsed = createSeriesSchema.safeParse(raw);
   if (!parsed.success) {
-    return { fieldErrors: parsed.error.flatten().fieldErrors };
+    return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
   }
 
   const { name, description, cadence, location, host, tag, churchId } = parsed.data;

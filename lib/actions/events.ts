@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { createEventSchema } from "@/lib/validations/event";
 
@@ -27,7 +28,7 @@ export async function createEventAction(
 
   const parsed = createEventSchema.safeParse(raw);
   if (!parsed.success) {
-    return { fieldErrors: parsed.error.flatten().fieldErrors };
+    return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
   }
 
   const { title, date, time, location, host, tag, description, churchId, seriesId } =

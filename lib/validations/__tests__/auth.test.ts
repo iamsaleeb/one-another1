@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import { loginSchema, registerSchema } from '@/lib/validations/auth'
 
 describe('loginSchema', () => {
@@ -10,13 +11,13 @@ describe('loginSchema', () => {
   it('rejects a missing email', () => {
     const result = loginSchema.safeParse({ ...valid, email: '' })
     expect(result.success).toBe(false)
-    expect(result.error?.flatten().fieldErrors.email).toBeDefined()
+    expect(z.flattenError(result.error!).fieldErrors.email).toBeDefined()
   })
 
   it('rejects an invalid email format', () => {
     const result = loginSchema.safeParse({ ...valid, email: 'not-an-email' })
     expect(result.success).toBe(false)
-    expect(result.error?.flatten().fieldErrors.email).toContain(
+    expect(z.flattenError(result.error!).fieldErrors.email).toContain(
       'Invalid email address'
     )
   })
@@ -24,7 +25,7 @@ describe('loginSchema', () => {
   it('rejects an empty password', () => {
     const result = loginSchema.safeParse({ ...valid, password: '' })
     expect(result.success).toBe(false)
-    expect(result.error?.flatten().fieldErrors.password).toContain(
+    expect(z.flattenError(result.error!).fieldErrors.password).toContain(
       'Password is required'
     )
   })
@@ -51,7 +52,7 @@ describe('registerSchema', () => {
   it('rejects a name shorter than 2 characters', () => {
     const result = registerSchema.safeParse({ ...valid, name: 'J' })
     expect(result.success).toBe(false)
-    expect(result.error?.flatten().fieldErrors.name).toContain(
+    expect(z.flattenError(result.error!).fieldErrors.name).toContain(
       'Name must be at least 2 characters'
     )
   })
@@ -65,7 +66,7 @@ describe('registerSchema', () => {
   it('rejects an invalid email', () => {
     const result = registerSchema.safeParse({ ...valid, email: 'bad-email' })
     expect(result.success).toBe(false)
-    expect(result.error?.flatten().fieldErrors.email).toContain(
+    expect(z.flattenError(result.error!).fieldErrors.email).toContain(
       'Invalid email address'
     )
   })
@@ -77,7 +78,7 @@ describe('registerSchema', () => {
       confirmPassword: 'short',
     })
     expect(result.success).toBe(false)
-    expect(result.error?.flatten().fieldErrors.password).toContain(
+    expect(z.flattenError(result.error!).fieldErrors.password).toContain(
       'Password must be at least 8 characters'
     )
   })
@@ -88,7 +89,7 @@ describe('registerSchema', () => {
       confirmPassword: 'differentpass',
     })
     expect(result.success).toBe(false)
-    expect(result.error?.flatten().fieldErrors.confirmPassword).toContain(
+    expect(z.flattenError(result.error!).fieldErrors.confirmPassword).toContain(
       'Passwords do not match'
     )
   })
