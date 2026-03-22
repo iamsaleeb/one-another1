@@ -31,7 +31,8 @@
       "Bash(find /c/code/one-another1/components -type f \\\\\\(-name *.ts -o -name *.tsx \\\\\\))",
       "Bash(npm show:*)",
       "Bash(npm --version)",
-      "Bash(npm ls:*)"
+      "Bash(npm ls:*)",
+      "Bash(java:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
