@@ -27,7 +27,7 @@ export function BottomNav({ isOrganiser }: BottomNavProps) {
   const tabs = isOrganiser ? [...baseTabs, organiserTab] : baseTabs;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-[0px_-2px_31px_0px_#0000001A]">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-[0px_-2px_31px_0px_#0000001A] pb-safe">
       <div className="flex h-16 items-center justify-around px-2">
         {tabs.map(({ label, href, icon: Icon }) => {
           const isActive = pathname === href;
