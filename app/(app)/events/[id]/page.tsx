@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { auth } from "@/auth";
 import { UserRole } from "@prisma/client";
 import { getEventById } from "@/lib/actions/data";
+import { formatEventDatetime } from "@/lib/utils";
 import { InfoField } from "@/components/ui/info-field";
 import { HeroBanner } from "@/components/ui/hero-banner";
 import { DeleteEventButton } from "./_components/delete-event-button";
@@ -51,7 +52,7 @@ export default async function EventDetailPage({ params }: Props) {
 
           <div className="flex flex-col gap-4">
             <InfoField icon={User} label="Host">{event.host}</InfoField>
-            <InfoField icon={Calendar} label="Date & Time">{event.datetime}</InfoField>
+            <InfoField icon={Calendar} label="Date & Time">{formatEventDatetime(event.datetime)}</InfoField>
             <InfoField icon={MapPin} label="Location">{event.location}</InfoField>
             {event.series && (
               <InfoField icon={Repeat} label="Part of Series">

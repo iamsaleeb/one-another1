@@ -60,7 +60,7 @@ describe('createEventAction', () => {
     expect(mockEventCreate).toHaveBeenCalledWith({
       data: expect.objectContaining({
         title: 'Sunday Worship',
-        datetime: '2026-04-06T09:00',
+        datetime: new Date('2026-04-06T09:00'),
         location: 'Main Hall',
         host: 'Pastor John',
         tag: 'Worship',

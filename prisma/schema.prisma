@@ -124,7 +124,7 @@ model Series {
 
 model Event {
   id          String  @id @default(cuid())
-  datetime    String
+  datetime    DateTime
   title       String
   location    String
   host        String

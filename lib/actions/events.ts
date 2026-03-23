@@ -37,7 +37,7 @@ export async function createEventAction(
   const { title, date, time, location, host, tag, description, seriesId } = parsed.data;
   let { churchId } = parsed.data;
 
-  const datetime = `${date}T${time}`;
+  const datetime = new Date(`${date}T${time}`);
 
   if (seriesId) {
     const series = await prisma.series.findUnique({ where: { id: seriesId }, select: { churchId: true } });
@@ -93,7 +93,7 @@ export async function updateEventAction(
 
   const { title, date, time, location, host, tag, description, seriesId } = parsed.data;
   let { churchId } = parsed.data;
-  const datetime = `${date}T${time}`;
+  const datetime = new Date(`${date}T${time}`);
 
   if (seriesId) {
     const series = await prisma.series.findUnique({ where: { id: seriesId }, select: { churchId: true } });

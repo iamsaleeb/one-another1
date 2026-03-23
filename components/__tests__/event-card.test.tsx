@@ -3,7 +3,7 @@ import { EventCard } from '@/components/event-card'
 
 const sampleEvent = {
   id: 'evt-1',
-  datetime: 'Sun, Mar 16 · 9:00 AM',
+  datetime: new Date('2026-03-16T09:00'),
   title: 'Sunday Worship Service',
   location: 'Main Hall, Grace Church',
   host: 'Pastor John',
@@ -19,7 +19,7 @@ describe('EventCard', () => {
 
   it('renders the event datetime', () => {
     render(<EventCard event={sampleEvent} />)
-    expect(screen.getByText('Sun, Mar 16 · 9:00 AM')).toBeInTheDocument()
+    expect(screen.getByText('MON, 16 MAR | 9:00 AM')).toBeInTheDocument()
   })
 
   it('renders the event location', () => {

@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { Repeat } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatEventDatetime } from "@/lib/utils";
 
 interface EventCardProps {
   event: {
     id: string;
-    datetime: string;
+    datetime: Date;
     title: string;
     location: string;
     host: string;
@@ -22,7 +23,7 @@ export function EventCard({ event }: EventCardProps) {
         <CardContent className="flex flex-col gap-1.5 p-4">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold text-primary uppercase tracking-wide">
-              {event.datetime}
+              {formatEventDatetime(event.datetime)}
             </p>
             <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary whitespace-nowrap">
               {event.badge}

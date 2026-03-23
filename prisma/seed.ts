@@ -104,7 +104,7 @@ async function main() {
   // Create upcoming events
   await prisma.event.create({
     data: {
-      datetime: "MON, 10 MAY | 7:30 PM",
+      datetime: new Date("2025-05-10T19:30"),
       title: "The Cross of Forgiveness",
       location: "St Mary Church",
       host: "Fr Dan Fanous",
@@ -118,7 +118,7 @@ async function main() {
 
   await prisma.event.create({
     data: {
-      datetime: "FRI, 14 MAY | 6:30 PM",
+      datetime: new Date("2025-05-14T18:30"),
       title: "Youth Fellowship",
       location: "St George Church",
       host: "Fr Mark Mikhail",
@@ -132,7 +132,7 @@ async function main() {
 
   await prisma.event.create({
     data: {
-      datetime: "SAT, 15 MAY | 9:00 AM",
+      datetime: new Date("2025-05-15T09:00"),
       title: "Community Outreach",
       location: "Downtown Community Center",
       host: "Deacon Peter",
@@ -147,7 +147,7 @@ async function main() {
   // Create past events
   await prisma.event.create({
     data: {
-      datetime: "SUN, 1 MAR | 10:00 AM",
+      datetime: new Date("2025-03-01T10:00"),
       title: "Sunday Worship Service",
       location: "Grace Community Church",
       host: "Fr Daniel Hanna",
@@ -161,7 +161,7 @@ async function main() {
 
   await prisma.event.create({
     data: {
-      datetime: "WED, 5 MAR | 7:00 PM",
+      datetime: new Date("2025-03-05T19:00"),
       title: "Lenten Prayer Group",
       location: "New Life Fellowship",
       host: "Fr Mark Mikhail",
@@ -175,7 +175,7 @@ async function main() {
 
   await prisma.event.create({
     data: {
-      datetime: "FRI, 7 MAR | 6:30 PM",
+      datetime: new Date("2025-03-07T18:30"),
       title: "Youth Bible Study",
       location: "St George Church — Youth Hall",
       host: "Deacon Paul",
