@@ -117,7 +117,6 @@
   --sidebar-ring: oklch(0.408 0.123 38.172);
 }
 
-
 @utility pt-safe {
   padding-top: env(safe-area-inset-top, 0px);
 }
@@ -132,5 +131,14 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  button,
+  a,
+  [role="button"] {
+    /* Prevent Android WebView from absorbing taps as scroll-detection gestures.
+       Without this, <button onClick> elements can appear completely unresponsive
+       on Android while <a href> links still work (they get native tap handling). */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 }
