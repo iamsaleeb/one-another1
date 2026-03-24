@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams, useParams } from "next/navigation";
-import { useEffect, useState, Suspense } from "react";
+import { Suspense } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, X, ChevronLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { getInitials } from "@/lib/utils";
 import { useIsDetailPage } from "@/lib/hooks/use-is-detail-page";
+import { SearchBar } from "@/components/search-bar";
+import type { WhenFilter, TypeFilter } from "@/types/search";
 
 interface TopNavUser {
   name?: string | null;
@@ -25,12 +26,6 @@ function TopNavInner({ user }: TopNavProps) {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
-  const urlQuery = searchParams.get("q") ?? "";
-  const [query, setQuery] = useState(urlQuery);
-
-  useEffect(() => {
-    setQuery(urlQuery);
-  }, [urlQuery]);
 
   const isDetailPage = useIsDetailPage();
   const id = params?.id ?? null;
@@ -49,21 +44,6 @@ function TopNavInner({ user }: TopNavProps) {
   }
   if (isSeriesDetail || isSeriesCreate) {
     backHref = "/series";
-  }
-
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    const q = query.trim();
-    if (q) {
-      router.push(`/?q=${encodeURIComponent(q)}`);
-    } else {
-      router.push("/");
-    }
-  }
-
-  function handleClear() {
-    setQuery("");
-    router.push("/");
   }
 
   return (
@@ -98,32 +78,12 @@ function TopNavInner({ user }: TopNavProps) {
 
       {!isDetailPage && (
         <div className="bg-white px-4 py-2.5 border-b border-border">
-          <form onSubmit={handleSearch} className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search events…"
-                className="pl-9 pr-9 rounded-full bg-muted/60 border-0 h-10 text-sm focus-visible:ring-0"
-              />
-              {query && (
-                <button
-                  type="button"
-                  onClick={handleClear}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="size-4" />
-                </button>
-              )}
-            </div>
-            <button
-              type="submit"
-              className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground shrink-0"
-            >
-              <Search className="size-4" />
-            </button>
-          </form>
+          <SearchBar
+            initialQuery={searchParams.get("q") ?? ""}
+            initialWhen={(searchParams.get("when") as WhenFilter) ?? undefined}
+            initialCategory={searchParams.get("category") ?? ""}
+            initialType={(searchParams.get("type") as TypeFilter) ?? "all"}
+          />
         </div>
       )}
     </header>

@@ -67,29 +67,24 @@ describe('TopNav — home page', () => {
     expect(screen.getByDisplayValue('worship')).toBeInTheDocument()
   })
 
-  it('shows an extra clear (X) button when search input has a value', () => {
+  it('shows a clear (X) button when search input has a value', () => {
     setupNavMocks({ q: 'hello' })
     render(<TopNav />)
-    // Without a query there is 1 button (submit). With a query the X clear button is also rendered.
-    const buttons = screen.getAllByRole('button')
-    expect(buttons).toHaveLength(2)
+    expect(screen.getByRole('button', { name: /clear search/i })).toBeInTheDocument()
   })
 
   it('navigates on search form submit', async () => {
     render(<TopNav />)
     const input = screen.getByPlaceholderText(/search events/i)
     await userEvent.type(input, 'grace')
-    // Find and click the search submit button
-    const buttons = screen.getAllByRole('button')
-    const submitBtn = buttons[buttons.length - 1]
+    const submitBtn = screen.getByRole('button', { name: /^search$/i })
     await userEvent.click(submitBtn)
     expect(mockPush).toHaveBeenCalledWith('/?q=grace')
   })
 
   it('navigates to / on empty search submit', async () => {
     render(<TopNav />)
-    const buttons = screen.getAllByRole('button')
-    const submitBtn = buttons[buttons.length - 1]
+    const submitBtn = screen.getByRole('button', { name: /^search$/i })
     await userEvent.click(submitBtn)
     expect(mockPush).toHaveBeenCalledWith('/')
   })

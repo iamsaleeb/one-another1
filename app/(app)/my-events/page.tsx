@@ -1,5 +1,3 @@
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { EventCard } from "@/components/event-card";
 import { getEvents, getPastEvents } from "@/lib/actions/data";
 import { PageHeader } from "@/components/ui/page-header";

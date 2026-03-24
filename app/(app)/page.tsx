@@ -4,6 +4,7 @@ import { MapPin, SearchX } from "lucide-react";
 import { EventCard } from "@/components/event-card";
 import { getEvents, getSeries, searchEventsAndChurches } from "@/lib/actions/data";
 import { PageHeader } from "@/components/ui/page-header";
+import { WHEN_LABELS, TYPE_LABELS, type WhenFilter, type TypeFilter } from "@/types/search";
 
 const CADENCE_LABELS: Record<string, string> = {
   WEEKLY: "Weekly",
@@ -15,36 +16,51 @@ const CADENCE_LABELS: Record<string, string> = {
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; type?: string; when?: string; category?: string }>;
 }) {
-  const { q } = await searchParams;
+  const { q, type, when, category } = await searchParams;
   const query = q?.trim() ?? "";
+  const hasFilters = !!(query || type || when || category);
 
   const [searchResults, allEvents, allSeries] = await Promise.all([
-    query ? searchEventsAndChurches(query) : null,
-    query ? null : getEvents(),
-    query ? null : getSeries(),
+    hasFilters
+      ? searchEventsAndChurches({
+          query,
+          type: (type as TypeFilter) ?? "all",
+          when: when as WhenFilter | undefined,
+          category: category ?? "",
+        })
+      : null,
+    hasFilters ? null : getEvents(),
+    hasFilters ? null : getSeries(),
   ]);
 
   const filteredEvents = searchResults?.events ?? null;
   const filteredChurches = searchResults?.churches ?? null;
   const hasResults = (filteredEvents?.length ?? 0) > 0 || (filteredChurches?.length ?? 0) > 0;
 
+  const filterParts = [
+    query ? `"${query}"` : null,
+    category || null,
+    when ? WHEN_LABELS[when as WhenFilter] : null,
+    type && type !== "all" ? TYPE_LABELS[type] : null,
+  ].filter(Boolean);
+
   return (
     <div className="flex flex-col min-h-screen">
       <PageHeader
-        title={query ? "Results" : "Home"}
-        description={query ? `Showing results for "${q}"` : undefined}
+        title={hasFilters ? "Results" : "Home"}
+        description={filterParts.length ? `Showing: ${filterParts.join(" · ")}` : undefined}
       />
 
       <div className="flex flex-col gap-6 px-4 py-2">
-        {query ? (
+        {hasFilters ? (
           /* ── Search results ── */
           !hasResults ? (
             <div className="flex flex-col items-center gap-3 py-16 text-center">
               <SearchX className="size-10 text-muted-foreground/40" />
               <p className="text-base font-semibold">No results found</p>
-              <p className="text-sm text-muted-foreground">Try a different search term</p>
+              <p className="text-sm text-muted-foreground">Try adjusting your filters</p>
             </div>
           ) : (
             <>

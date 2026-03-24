@@ -287,7 +287,7 @@ describe('searchEventsAndChurches', () => {
     mockEventFindMany.mockResolvedValue([sampleEvent])
     mockChurchFindMany.mockResolvedValue([sampleChurch])
 
-    const result = await searchEventsAndChurches('grace')
+    const result = await searchEventsAndChurches({ query: 'grace' })
 
     expect(result).toEqual({ events: [sampleEvent], churches: [sampleChurch] })
   })
@@ -296,27 +296,28 @@ describe('searchEventsAndChurches', () => {
     mockEventFindMany.mockResolvedValue([])
     mockChurchFindMany.mockResolvedValue([])
 
-    await searchEventsAndChurches('worship')
+    await searchEventsAndChurches({ query: 'worship' })
 
-    expect(mockEventFindMany).toHaveBeenCalledWith({
-      where: {
-        isPast: false,
-        OR: [
-          { title: { contains: 'worship', mode: 'insensitive' } },
-          { location: { contains: 'worship', mode: 'insensitive' } },
-          { host: { contains: 'worship', mode: 'insensitive' } },
-          { tag: { contains: 'worship', mode: 'insensitive' } },
-        ],
-      },
-      include: { series: { select: { name: true } } },
-    })
+    expect(mockEventFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          isPast: false,
+          OR: [
+            { title: { contains: 'worship', mode: 'insensitive' } },
+            { location: { contains: 'worship', mode: 'insensitive' } },
+            { host: { contains: 'worship', mode: 'insensitive' } },
+            { tag: { contains: 'worship', mode: 'insensitive' } },
+          ],
+        }),
+      })
+    )
   })
 
   it('searches churches across name, denomination, and address fields', async () => {
     mockEventFindMany.mockResolvedValue([])
     mockChurchFindMany.mockResolvedValue([])
 
-    await searchEventsAndChurches('baptist')
+    await searchEventsAndChurches({ query: 'baptist' })
 
     expect(mockChurchFindMany).toHaveBeenCalledWith({
       where: {
@@ -333,10 +334,34 @@ describe('searchEventsAndChurches', () => {
     mockEventFindMany.mockResolvedValue([])
     mockChurchFindMany.mockResolvedValue([])
 
-    expect(await searchEventsAndChurches('zzznomatch')).toEqual({
+    expect(await searchEventsAndChurches({ query: 'zzznomatch' })).toEqual({
       events: [],
       churches: [],
     })
+  })
+
+  it('returns empty arrays when no filters provided', async () => {
+    expect(await searchEventsAndChurches({ query: '' })).toEqual({
+      events: [],
+      churches: [],
+    })
+  })
+
+  it('filters events by type=events only', async () => {
+    mockEventFindMany.mockResolvedValue([sampleEvent])
+
+    const result = await searchEventsAndChurches({ query: 'grace', type: 'events' })
+
+    expect(result.churches).toEqual([])
+    expect(mockChurchFindMany).not.toHaveBeenCalled()
+  })
+
+  it('filters to churches only when type=churches', async () => {
+    mockChurchFindMany.mockResolvedValue([sampleChurch])
+
+    const result = await searchEventsAndChurches({ query: 'grace', type: 'churches' })
+
+    expect(result.events).toEqual([])
   })
 })
 
