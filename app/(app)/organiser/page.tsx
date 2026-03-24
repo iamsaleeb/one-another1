@@ -13,7 +13,7 @@ import { OrganiserTabs } from "./_components/organiser-tabs";
 export default async function OrganiserPage() {
   const session = await auth();
 
-  if (session?.user?.role !== UserRole.ORGANISER) {
+  if (session?.user?.role !== UserRole.ORGANISER && session?.user?.role !== UserRole.ADMIN) {
     redirect("/");
   }
 

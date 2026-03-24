@@ -78,4 +78,31 @@ describe('BottomNav', () => {
     render(<BottomNav isOrganiser={false} />)
     expect(screen.queryByText('Tools')).not.toBeInTheDocument()
   })
+
+  it('renders five tabs including Tools and Admin when isAdmin is true', () => {
+    render(<BottomNav isAdmin={true} />)
+    expect(screen.getByText('Home')).toBeInTheDocument()
+    expect(screen.getByText('Churches')).toBeInTheDocument()
+    expect(screen.getByText('My Events')).toBeInTheDocument()
+    expect(screen.getByText('Tools')).toBeInTheDocument()
+    expect(screen.getByText('Admin')).toBeInTheDocument()
+  })
+
+  it('Admin tab links to /admin', () => {
+    render(<BottomNav isAdmin={true} />)
+    const links = screen.getAllByRole('link')
+    const adminLink = links.find((l) => l.getAttribute('href') === '/admin')
+    expect(adminLink).toBeDefined()
+  })
+
+  it('does not render Admin tab when isAdmin is false', () => {
+    render(<BottomNav isAdmin={false} />)
+    expect(screen.queryByText('Admin')).not.toBeInTheDocument()
+  })
+
+  it('shows both Tools and Admin tabs when isAdmin is true', () => {
+    render(<BottomNav isAdmin={true} isOrganiser={true} />)
+    expect(screen.getByText('Admin')).toBeInTheDocument()
+    expect(screen.getByText('Tools')).toBeInTheDocument()
+  })
 })

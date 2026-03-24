@@ -20,21 +20,21 @@ jest.mock('@/auth', () => ({
 }))
 
 jest.mock('@/lib/permissions', () => ({
-  isOrganiserForChurch: jest.fn(),
+  canManageChurch: jest.fn(),
 }))
 
 import { redirect } from 'next/navigation'
 import { createEventAction } from '@/lib/actions/events'
 import { prisma } from '@/lib/db'
 import { auth } from '@/auth'
-import { isOrganiserForChurch } from '@/lib/permissions'
+import { canManageChurch } from '@/lib/permissions'
 
 const mockRedirect = redirect as unknown as jest.Mock
 const mockEventCreate = prisma.event.create as jest.Mock
 const mockEventFindUnique = prisma.event.findUnique as jest.Mock
 const mockSeriesFindUnique = prisma.series.findUnique as jest.Mock
 const mockAuth = auth as jest.Mock
-const mockIsOrganiserForChurch = isOrganiserForChurch as jest.Mock
+const mockCanManageChurch = canManageChurch as jest.Mock
 
 function makeFormData(fields: Record<string, string>): FormData {
   const fd = new FormData()
@@ -58,7 +58,7 @@ const validFields = {
 beforeEach(() => {
   jest.clearAllMocks()
   mockAuth.mockResolvedValue({ user: { id: 'user-1', role: 'ORGANISER' } })
-  mockIsOrganiserForChurch.mockResolvedValue(true)
+  mockCanManageChurch.mockResolvedValue(true)
 })
 
 describe('createEventAction', () => {
@@ -162,7 +162,7 @@ describe('createEventAction', () => {
   })
 
   it('returns an error when organiser is not assigned to the church', async () => {
-    mockIsOrganiserForChurch.mockResolvedValue(false)
+    mockCanManageChurch.mockResolvedValue(false)
 
     const result = await createEventAction({}, makeFormData(validFields))
 

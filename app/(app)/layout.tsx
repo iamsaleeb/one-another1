@@ -11,13 +11,14 @@ export default async function AppLayout({
 }) {
   const session = await auth();
   const isOrganiser = session?.user?.role === UserRole.ORGANISER;
+  const isAdmin = session?.user?.role === UserRole.ADMIN;
 
   return (
     <div className="min-h-screen">
       <TopNav user={session?.user} />
       <main className="pb-nav">{children}</main>
-      <BottomNav isOrganiser={isOrganiser} />
-      <CreateEventFAB isOrganiser={isOrganiser} />
+      <BottomNav isOrganiser={isOrganiser} isAdmin={isAdmin} />
+      <CreateEventFAB isOrganiser={isOrganiser || isAdmin} />
     </div>
   );
 }

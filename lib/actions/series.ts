@@ -6,14 +6,14 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
 import { UserRole } from "@prisma/client";
 import { createSeriesSchema, type CreateSeriesState } from "@/lib/validations/series";
-import { isOrganiserForChurch } from "@/lib/permissions";
+import { canManageChurch } from "@/lib/permissions";
 
 export async function createSeriesAction(
   _prevState: CreateSeriesState,
   formData: FormData
 ): Promise<CreateSeriesState> {
   const session = await auth();
-  if (session?.user?.role !== UserRole.ORGANISER) return { error: "Unauthorised." };
+  if (session?.user?.role !== UserRole.ORGANISER && session?.user?.role !== UserRole.ADMIN) return { error: "Unauthorised." };
   const raw = {
     name:        formData.get("name"),
     description: formData.get("description"),
@@ -31,7 +31,7 @@ export async function createSeriesAction(
 
   const { name, description, cadence, location, host, tag, churchId } = parsed.data;
 
-  const allowed = await isOrganiserForChurch(session.user.id, churchId);
+  const allowed = await canManageChurch(session.user.id, session.user.role, churchId);
   if (!allowed) return { error: "You are not assigned to this church." };
 
   const created = await prisma.series.create({
@@ -56,7 +56,7 @@ export async function updateSeriesAction(
   formData: FormData
 ): Promise<CreateSeriesState> {
   const session = await auth();
-  if (session?.user?.role !== UserRole.ORGANISER) redirect("/");
+  if (session?.user?.role !== UserRole.ORGANISER && session?.user?.role !== UserRole.ADMIN) redirect("/");
 
   const raw = {
     name:        formData.get("name"),
@@ -75,7 +75,7 @@ export async function updateSeriesAction(
 
   const { name, description, cadence, location, host, tag, churchId } = parsed.data;
 
-  const allowed = await isOrganiserForChurch(session.user.id, churchId);
+  const allowed = await canManageChurch(session.user.id, session.user.role, churchId);
   if (!allowed) redirect("/");
 
   await prisma.series.update({
@@ -96,7 +96,7 @@ export async function updateSeriesAction(
 
 export async function deleteSeriesAction(id: string): Promise<void> {
   const session = await auth();
-  if (session?.user?.role !== UserRole.ORGANISER) redirect("/");
+  if (session?.user?.role !== UserRole.ORGANISER && session?.user?.role !== UserRole.ADMIN) redirect("/");
 
   const series = await prisma.series.findUnique({ where: { id }, select: { churchId: true } });
   if (!series) redirect("/organiser");

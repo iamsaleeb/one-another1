@@ -16,19 +16,19 @@ jest.mock('@/auth', () => ({
 }))
 
 jest.mock('@/lib/permissions', () => ({
-  isOrganiserForChurch: jest.fn(),
+  canManageChurch: jest.fn(),
 }))
 
 import { redirect } from 'next/navigation'
 import { createSeriesAction } from '@/lib/actions/series'
 import { prisma } from '@/lib/db'
 import { auth } from '@/auth'
-import { isOrganiserForChurch } from '@/lib/permissions'
+import { canManageChurch } from '@/lib/permissions'
 
 const mockRedirect = redirect as unknown as jest.Mock
 const mockSeriesCreate = prisma.series.create as jest.Mock
 const mockAuth = auth as jest.Mock
-const mockIsOrganiserForChurch = isOrganiserForChurch as jest.Mock
+const mockCanManageChurch = canManageChurch as jest.Mock
 
 function makeFormData(fields: Record<string, string>): FormData {
   const fd = new FormData()
@@ -51,7 +51,7 @@ const validFields = {
 beforeEach(() => {
   jest.clearAllMocks()
   mockAuth.mockResolvedValue({ user: { id: 'user-1', role: 'ORGANISER' } })
-  mockIsOrganiserForChurch.mockResolvedValue(true)
+  mockCanManageChurch.mockResolvedValue(true)
 })
 
 describe('createSeriesAction', () => {
@@ -131,7 +131,7 @@ describe('createSeriesAction', () => {
   })
 
   it('returns an error when organiser is not assigned to the church', async () => {
-    mockIsOrganiserForChurch.mockResolvedValue(false)
+    mockCanManageChurch.mockResolvedValue(false)
 
     const result = await createSeriesAction({}, makeFormData(validFields))
 

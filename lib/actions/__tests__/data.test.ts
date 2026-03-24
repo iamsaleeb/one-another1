@@ -9,6 +9,7 @@ jest.mock('@/lib/db', () => ({
     church: { findMany: jest.fn(), findUnique: jest.fn() },
     series: { findMany: jest.fn(), findUnique: jest.fn() },
     churchOrganiser: { findMany: jest.fn() },
+    churchAdmin: { findMany: jest.fn() },
   },
 }))
 
@@ -19,6 +20,9 @@ import {
   getChurches,
   getChurchById,
   getChurchesByOrganiser,
+  getChurchesByAdmin,
+  getChurchesByManager,
+  getOrganisersByChurch,
   searchEventsAndChurches,
   getSeries,
   getSeriesById,
@@ -37,6 +41,7 @@ const mockChurchFindUnique = prisma.church.findUnique as jest.Mock
 const mockSeriesFindMany = prisma.series.findMany as jest.Mock
 const mockSeriesFindUnique = prisma.series.findUnique as jest.Mock
 const mockChurchOrganiserFindMany = prisma.churchOrganiser.findMany as jest.Mock
+const mockChurchAdminFindMany = prisma.churchAdmin.findMany as jest.Mock
 
 const sampleEvent = {
   id: 'evt-1',
@@ -119,6 +124,89 @@ describe('getEventById', () => {
   it('returns null when the event does not exist', async () => {
     mockEventFindUnique.mockResolvedValue(null)
     expect(await getEventById('not-found')).toBeNull()
+  })
+})
+
+describe('getChurchesByAdmin', () => {
+  it('returns the churches the admin is assigned to ordered by name', async () => {
+    mockChurchAdminFindMany.mockResolvedValue([
+      { church: { id: 'ch-1', name: 'Grace Church' } },
+    ])
+
+    const result = await getChurchesByAdmin('admin-1')
+
+    expect(result).toEqual([{ id: 'ch-1', name: 'Grace Church' }])
+    expect(mockChurchAdminFindMany).toHaveBeenCalledWith({
+      where: { userId: 'admin-1' },
+      select: { church: { select: { id: true, name: true } } },
+      orderBy: { church: { name: 'asc' } },
+    })
+  })
+
+  it('returns an empty array when the admin has no assigned churches', async () => {
+    mockChurchAdminFindMany.mockResolvedValue([])
+    expect(await getChurchesByAdmin('admin-none')).toEqual([])
+  })
+})
+
+describe('getOrganisersByChurch', () => {
+  it('returns organisers for a church ordered by name', async () => {
+    mockChurchOrganiserFindMany.mockResolvedValue([
+      { user: { id: 'user-1', name: 'Alice', email: 'alice@example.com' } },
+    ])
+
+    const result = await getOrganisersByChurch('ch-1')
+
+    expect(result).toEqual([{ id: 'user-1', name: 'Alice', email: 'alice@example.com' }])
+    expect(mockChurchOrganiserFindMany).toHaveBeenCalledWith({
+      where: { churchId: 'ch-1' },
+      select: { user: { select: { id: true, name: true, email: true } } },
+      orderBy: { user: { name: 'asc' } },
+    })
+  })
+
+  it('returns an empty array when the church has no organisers', async () => {
+    mockChurchOrganiserFindMany.mockResolvedValue([])
+    expect(await getOrganisersByChurch('ch-none')).toEqual([])
+  })
+})
+
+describe('getChurchesByManager', () => {
+  it('merges and deduplicates churches from both organiser and admin tables, sorted by name', async () => {
+    mockChurchOrganiserFindMany.mockResolvedValue([
+      { church: { id: 'ch-1', name: 'Grace Church' } },
+    ])
+    mockChurchAdminFindMany.mockResolvedValue([
+      { church: { id: 'ch-2', name: 'Harvest Church' } },
+    ])
+
+    const result = await getChurchesByManager('user-1')
+
+    expect(result).toEqual([
+      { id: 'ch-1', name: 'Grace Church' },
+      { id: 'ch-2', name: 'Harvest Church' },
+    ])
+  })
+
+  it('deduplicates when the same church appears in both tables', async () => {
+    mockChurchOrganiserFindMany.mockResolvedValue([
+      { church: { id: 'ch-1', name: 'Grace Church' } },
+    ])
+    mockChurchAdminFindMany.mockResolvedValue([
+      { church: { id: 'ch-1', name: 'Grace Church' } },
+    ])
+
+    const result = await getChurchesByManager('user-1')
+
+    expect(result).toHaveLength(1)
+    expect(result[0].id).toBe('ch-1')
+  })
+
+  it('returns empty array when user has no assignments in either table', async () => {
+    mockChurchOrganiserFindMany.mockResolvedValue([])
+    mockChurchAdminFindMany.mockResolvedValue([])
+
+    expect(await getChurchesByManager('user-none')).toEqual([])
   })
 })
 

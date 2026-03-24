@@ -10,6 +10,7 @@ datasource db {
 enum UserRole {
   ATTENDEE
   ORGANISER
+  ADMIN
 }
 
 enum Cadence {
@@ -32,6 +33,7 @@ model User {
   events        Event[]   @relation("UserEvents")
   series        Series[]  @relation("UserSeries")
   churchOrganisers ChurchOrganiser[] @relation("UserChurches")
+  adminChurches    ChurchAdmin[]     @relation("UserAdminChurches")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -93,9 +95,20 @@ model Church {
   events       Event[]
   series       Series[]
   organisers   ChurchOrganiser[] @relation("ChurchOrganisers")
+  admins       ChurchAdmin[]     @relation("ChurchAdmins")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model ChurchAdmin {
+  userId    String
+  churchId  String
+  user      User     @relation("UserAdminChurches", fields: [userId], references: [id], onDelete: Cascade)
+  church    Church   @relation("ChurchAdmins", fields: [churchId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, churchId])
 }
 
 model ChurchOrganiser {

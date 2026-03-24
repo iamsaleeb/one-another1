@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
 import { UserRole } from "@prisma/client";
 import { createEventSchema } from "@/lib/validations/event";
-import { isOrganiserForChurch } from "@/lib/permissions";
+import { canManageChurch } from "@/lib/permissions";
 
 export interface CreateEventState {
   error?: string;
@@ -18,7 +18,7 @@ export async function createEventAction(
   formData: FormData
 ): Promise<CreateEventState> {
   const session = await auth();
-  if (session?.user?.role !== UserRole.ORGANISER) return { error: "Unauthorised." };
+  if (session?.user?.role !== UserRole.ORGANISER && session?.user?.role !== UserRole.ADMIN) return { error: "Unauthorised." };
   const raw = {
     title: formData.get("title"),
     date: formData.get("date"),
@@ -50,7 +50,7 @@ export async function createEventAction(
     return { fieldErrors: { churchId: ["Church is required"] } };
   }
 
-  const allowed = await isOrganiserForChurch(session.user.id, churchId);
+  const allowed = await canManageChurch(session.user.id, session.user.role, churchId);
   if (!allowed) return { error: "You are not assigned to this church." };
 
   await prisma.event.create({
@@ -77,7 +77,7 @@ export async function updateEventAction(
   formData: FormData
 ): Promise<CreateEventState> {
   const session = await auth();
-  if (session?.user?.role !== UserRole.ORGANISER) redirect("/");
+  if (session?.user?.role !== UserRole.ORGANISER && session?.user?.role !== UserRole.ADMIN) redirect("/");
 
   const raw = {
     title: formData.get("title"),
@@ -109,7 +109,7 @@ export async function updateEventAction(
     return { fieldErrors: { churchId: ["Church is required"] } };
   }
 
-  const allowed = await isOrganiserForChurch(session.user.id, churchId);
+  const allowed = await canManageChurch(session.user.id, session.user.role, churchId);
   if (!allowed) redirect("/");
 
   await prisma.event.update({
@@ -131,12 +131,12 @@ export async function updateEventAction(
 
 export async function deleteEventAction(id: string): Promise<void> {
   const session = await auth();
-  if (session?.user?.role !== UserRole.ORGANISER) redirect("/");
+  if (session?.user?.role !== UserRole.ORGANISER && session?.user?.role !== UserRole.ADMIN) redirect("/");
 
   const event = await prisma.event.findUnique({ where: { id }, select: { churchId: true } });
   if (!event) redirect("/organiser");
 
-  const allowed = await isOrganiserForChurch(session.user.id, event.churchId);
+  const allowed = await canManageChurch(session.user.id, session.user.role, event.churchId);
   if (!allowed) redirect("/");
 
   await prisma.event.delete({ where: { id } });

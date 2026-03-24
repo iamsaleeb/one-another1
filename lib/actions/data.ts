@@ -24,6 +24,46 @@ export const getEventById = cache(async function getEventById(id: string) {
   });
 });
 
+export const getChurchesByAdmin = cache(async function getChurchesByAdmin(userId: string) {
+  const assignments = await prisma.churchAdmin.findMany({
+    where: { userId },
+    select: { church: { select: { id: true, name: true } } },
+    orderBy: { church: { name: "asc" } },
+  });
+  return assignments.map((a) => a.church);
+});
+
+export const getOrganisersByChurch = cache(async function getOrganisersByChurch(churchId: string) {
+  const assignments = await prisma.churchOrganiser.findMany({
+    where: { churchId },
+    select: { user: { select: { id: true, name: true, email: true } } },
+    orderBy: { user: { name: "asc" } },
+  });
+  return assignments.map((a) => a.user);
+});
+
+export const getChurchesByManager = cache(async function getChurchesByManager(userId: string) {
+  const [organiserRows, adminRows] = await Promise.all([
+    prisma.churchOrganiser.findMany({
+      where: { userId },
+      select: { church: { select: { id: true, name: true } } },
+    }),
+    prisma.churchAdmin.findMany({
+      where: { userId },
+      select: { church: { select: { id: true, name: true } } },
+    }),
+  ]);
+  const seen = new Set<string>();
+  const churches: { id: string; name: string }[] = [];
+  for (const row of [...organiserRows, ...adminRows]) {
+    if (!seen.has(row.church.id)) {
+      seen.add(row.church.id);
+      churches.push(row.church);
+    }
+  }
+  return churches.sort((a, b) => a.name.localeCompare(b.name));
+});
+
 export const getChurchesByOrganiser = cache(async function getChurchesByOrganiser(userId: string) {
   const assignments = await prisma.churchOrganiser.findMany({
     where: { userId },

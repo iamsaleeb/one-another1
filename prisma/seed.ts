@@ -8,8 +8,9 @@ async function main() {
   await prisma.event.deleteMany();
   await prisma.series.deleteMany();
   await prisma.churchOrganiser.deleteMany();
+  await prisma.churchAdmin.deleteMany();
   await prisma.serviceTime.deleteMany();
-  await prisma.user.deleteMany({ where: { role: "ORGANISER" } });
+  await prisma.user.deleteMany({ where: { role: { in: ["ORGANISER", "ADMIN"] } } });
   await prisma.church.deleteMany();
 
   // Create churches
@@ -221,6 +222,21 @@ async function main() {
   // organiser2 can only manage Harvest
   await prisma.churchOrganiser.create({
     data: { userId: organiser2.id, churchId: harvest.id },
+  });
+
+  // Create admin user
+  const admin1 = await prisma.user.create({
+    data: {
+      name: "Carol Admin",
+      email: "admin@example.com",
+      password: await bcrypt.hash("password123", 10),
+      role: "ADMIN",
+    },
+  });
+
+  // admin1 manages Grace Community Church
+  await prisma.churchAdmin.create({
+    data: { userId: admin1.id, churchId: grace.id },
   });
 
   console.warn("Seed completed successfully.");
