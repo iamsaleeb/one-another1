@@ -18,7 +18,8 @@ export default async function EditEventPage({ params }: Props) {
 
   const churches = await getChurchesByOrganiser(session.user.id);
 
-  const [date, time] = event.datetime.split("T");
+  const [date, fullTime] = event.datetime.toISOString().split("T");
+  const time = fullTime.slice(0, 5);
 
   return (
     <div className="mx-auto max-w-lg">
