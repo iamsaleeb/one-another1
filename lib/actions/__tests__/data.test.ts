@@ -1,6 +1,6 @@
-// Bypass React's cache() so functions behave as regular async functions in tests
 jest.mock('react', () => ({
-  cache: (fn: unknown) => fn,
+  ...jest.requireActual('react'),
+  cache: (fn: (...args: unknown[]) => unknown) => fn,
 }))
 
 jest.mock('@/lib/db', () => ({

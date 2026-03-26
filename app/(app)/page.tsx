@@ -1,17 +1,14 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, SearchX } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { EventCard } from "@/components/event-card";
-import { getEvents, getSeries, searchEventsAndChurches } from "@/lib/actions/data";
+import { searchEventsAndChurches } from "@/lib/actions/data";
 import { PageHeader } from "@/components/ui/page-header";
 import { WHEN_LABELS, TYPE_LABELS, type WhenFilter, type TypeFilter } from "@/types/search";
-
-const CADENCE_LABELS: Record<string, string> = {
-  WEEKLY: "Weekly",
-  BIWEEKLY: "Bi-weekly",
-  MONTHLY: "Monthly",
-  CUSTOM: "Custom",
-};
+import { EventList } from "./_components/event-list";
+import { SeriesRail } from "./_components/series-rail";
 
 export default async function Home({
   searchParams,
@@ -22,18 +19,14 @@ export default async function Home({
   const query = q?.trim() ?? "";
   const hasFilters = !!(query || type || when || category);
 
-  const [searchResults, allEvents, allSeries] = await Promise.all([
-    hasFilters
-      ? searchEventsAndChurches({
-          query,
-          type: (type as TypeFilter) ?? "all",
-          when: when as WhenFilter | undefined,
-          category: category ?? "",
-        })
-      : null,
-    hasFilters ? null : getEvents(),
-    hasFilters ? null : getSeries(),
-  ]);
+  const searchResults = hasFilters
+    ? await searchEventsAndChurches({
+        query,
+        type: (type as TypeFilter) ?? "all",
+        when: when as WhenFilter | undefined,
+        category: category ?? "",
+      })
+    : null;
 
   const filteredEvents = searchResults?.events ?? null;
   const filteredChurches = searchResults?.churches ?? null;
@@ -107,32 +100,33 @@ export default async function Home({
         ) : (
           /* ── Default home content ── */
           <>
-            <section className="flex flex-col gap-3">
-              <h2 className="text-base font-semibold">Upcoming Events</h2>
-              {allEvents?.map((item) => (
-                <EventCard key={item.id} event={{ ...item, badge: item.tag, seriesName: item.series?.name }} />
-              ))}
-            </section>
-
-            {allSeries && allSeries.length > 0 && (
-              <section className="flex flex-col gap-3">
-                <h2 className="text-base font-semibold">Series</h2>
-                <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
-                  {allSeries.map((s) => (
-                    <Link
-                      key={s.id}
-                      href={`/series/${s.id}`}
-                      className="flex items-center gap-1.5 shrink-0 rounded-full bg-white shadow-card px-3 py-2 text-sm font-medium"
-                    >
-                      {s.name}
-                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                        {CADENCE_LABELS[s.cadence] ?? s.cadence}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            )}
+            <Suspense
+              fallback={
+                <section className="flex flex-col gap-3">
+                  <Skeleton className="h-5 w-36" />
+                  <Skeleton className="h-24 w-full rounded-2xl" />
+                  <Skeleton className="h-24 w-full rounded-2xl" />
+                  <Skeleton className="h-24 w-full rounded-2xl" />
+                </section>
+              }
+            >
+              <EventList />
+            </Suspense>
+            <Suspense
+              fallback={
+                <section className="flex flex-col gap-3">
+                  <Skeleton className="h-5 w-20" />
+                  <div className="flex gap-2">
+                    <Skeleton className="h-9 w-24 rounded-full shrink-0" />
+                    <Skeleton className="h-9 w-24 rounded-full shrink-0" />
+                    <Skeleton className="h-9 w-24 rounded-full shrink-0" />
+                    <Skeleton className="h-9 w-24 rounded-full shrink-0" />
+                  </div>
+                </section>
+              }
+            >
+              <SeriesRail />
+            </Suspense>
           </>
         )}
       </div>

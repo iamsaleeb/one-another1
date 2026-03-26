@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
 import { UserRole } from "@prisma/client";
@@ -37,6 +38,7 @@ export async function createSeriesAction(data: CreateSeriesInput): Promise<Actio
     },
   });
 
+  revalidatePath("/");
   redirect(`/series/${created.id}`);
 }
 
@@ -59,6 +61,7 @@ export async function updateSeriesAction(id: string, data: CreateSeriesInput): P
     data: { name, description, cadence, location, host, tag, churchId },
   });
 
+  revalidatePath("/");
   redirect(`/series/${id}`);
 }
 
@@ -73,5 +76,6 @@ export async function deleteSeriesAction(id: string): Promise<void> {
   if (!allowed) redirect("/");
 
   await prisma.series.delete({ where: { id } });
+  revalidatePath("/");
   redirect("/organiser");
 }

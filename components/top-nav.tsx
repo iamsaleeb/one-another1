@@ -73,7 +73,17 @@ function TopNavInner({ user }: TopNavProps) {
 
 export function TopNav({ user }: TopNavProps) {
   return (
-    <Suspense>
+    <Suspense
+      fallback={
+        <header className="sticky top-0 z-50 bg-primary pt-safe">
+          <div className="flex h-14 items-center justify-between px-4">
+            <span className="text-xl font-bold tracking-tight text-primary-foreground">
+              1Another
+            </span>
+          </div>
+        </header>
+      }
+    >
       <TopNavInner user={user} />
     </Suspense>
   );

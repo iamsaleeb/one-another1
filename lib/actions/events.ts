@@ -57,6 +57,7 @@ export async function createEventAction(data: CreateEventInput): Promise<ActionR
     },
   });
 
+  revalidatePath("/");
   redirect(seriesId ? `/series/${seriesId}` : "/my-events");
 }
 
@@ -104,6 +105,7 @@ export async function updateEventAction(id: string, data: CreateEventInput): Pro
     },
   });
 
+  revalidatePath("/");
   redirect(`/events/${id}`);
 }
 
@@ -118,6 +120,7 @@ export async function deleteEventAction(id: string): Promise<void> {
   if (!allowed) redirect("/");
 
   await prisma.event.delete({ where: { id } });
+  revalidatePath("/");
   redirect("/organiser");
 }
 

@@ -32,17 +32,14 @@ export default async function EventDetailPage({ params }: Props) {
   const shouldCheckOrganiser = session?.user?.role === UserRole.ORGANISER;
   const isAdmin = session?.user?.role === UserRole.ADMIN;
 
-  // Pre-fetch attendees in parallel for any organiser/admin; gate the result on actual permission below
-  const [organiserForChurch, attendeesData] = await Promise.all([
+  const organiserForChurch =
     shouldCheckOrganiser && userId
-      ? isOrganiserForChurch(userId, event.churchId)
-      : Promise.resolve(false),
-    shouldCheckOrganiser || isAdmin ? getEventAttendees(id) : Promise.resolve(undefined),
-  ]);
+      ? await isOrganiserForChurch(userId, event.churchId)
+      : false;
 
   const isOrganiser = shouldCheckOrganiser && !!organiserForChurch;
   const canViewAttendees = !!organiserForChurch || isAdmin;
-  const attendees = canViewAttendees ? attendeesData : undefined;
+  const attendees = canViewAttendees ? await getEventAttendees(id) : undefined;
 
   const isAttending = session?.user?.id
     ? event.attendees.some((a) => a.userId === session.user.id)

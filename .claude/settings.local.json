@@ -49,7 +49,17 @@
       "WebFetch(domain:medium.com)",
       "WebFetch(domain:capgo.app)",
       "Bash(head:*)",
-      "mcp__shadcn__get_audit_checklist"
+      "mcp__shadcn__get_audit_checklist",
+      "Bash(ls /c/code/one-another1/app/\\\\\\(app\\\\\\))",
+      "Bash(ls /c/code/one-another1/app/\\\\\\(app\\\\\\)/admin)",
+      "Bash(ls /c/code/one-another1/app/\\\\\\(app\\\\\\)/churches)",
+      "Bash(ls /c/code/one-another1/app/\\\\\\(app\\\\\\)/events)",
+      "Bash(ls /c/code/one-another1/app/\\\\\\(app\\\\\\)/series)",
+      "Bash(ls /c/code/one-another1/app/\\\\\\(app\\\\\\)/events/[id]/)",
+      "Bash(ls /c/code/one-another1/app/\\\\\\(app\\\\\\)/events/[id]/edit/)",
+      "Bash(ls /c/code/one-another1/app/\\\\\\(app\\\\\\)/series/[id]/)",
+      "Bash(ls /c/code/one-another1/app/\\\\\\(app\\\\\\)/series/[id]/edit/)",
+      "Bash(grep -A 30 if.*result.cacheComponents\\\\\\) node_modules/next/dist/server/config.js)"
     ]
   },
   "enableAllProjectMcpServers": true,

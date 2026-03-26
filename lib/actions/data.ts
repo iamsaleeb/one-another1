@@ -135,7 +135,7 @@ export const getChurchById = cache(async function getChurchById(id: string) {
   });
 });
 
-export async function searchEventsAndChurches(filters: SearchFilters) {
+export const searchEventsAndChurches = cache(async function searchEventsAndChurches(filters: SearchFilters) {
   const { query, type = "all", category, when } = filters;
   const hasFilters = !!(query || category || when);
 
@@ -186,7 +186,7 @@ export async function searchEventsAndChurches(filters: SearchFilters) {
   ]);
 
   return { events, churches };
-}
+});
 
 export const getSeries = cache(async function getSeries() {
   return prisma.series.findMany({

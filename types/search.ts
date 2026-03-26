@@ -32,3 +32,10 @@ export const TYPE_LABELS: Record<string, string> = {
   events: "Events only",
   churches: "Churches only",
 };
+
+export const CADENCE_LABELS: Record<string, string> = {
+  WEEKLY: "Weekly",
+  BIWEEKLY: "Bi-weekly",
+  MONTHLY: "Monthly",
+  CUSTOM: "Custom",
+};

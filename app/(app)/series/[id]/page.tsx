@@ -10,6 +10,7 @@ import { HeroBanner } from "@/components/ui/hero-banner";
 import { EventCard } from "@/components/event-card";
 import { Button } from "@/components/ui/button";
 import { DeleteSeriesButton } from "./_components/delete-series-button";
+import { CADENCE_LABELS } from "@/types/search";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -20,13 +21,6 @@ export async function generateMetadata({ params }: Props) {
   const series = await getSeriesById(id);
   return { title: series ? `${series.name} — One Another` : "Series Not Found" };
 }
-
-const CADENCE_LABELS: Record<string, string> = {
-  WEEKLY: "Weekly",
-  BIWEEKLY: "Bi-weekly",
-  MONTHLY: "Monthly",
-  CUSTOM: "Custom",
-};
 
 export default async function SeriesDetailPage({ params }: Props) {
   const { id } = await params;

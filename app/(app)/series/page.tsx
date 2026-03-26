@@ -2,13 +2,7 @@ import Link from "next/link";
 import { getSeries } from "@/lib/actions/data";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
-
-const CADENCE_LABELS: Record<string, string> = {
-  WEEKLY: "Weekly",
-  BIWEEKLY: "Bi-weekly",
-  MONTHLY: "Monthly",
-  CUSTOM: "Custom",
-};
+import { CADENCE_LABELS } from "@/types/search";
 
 export default async function SeriesPage() {
   const allSeries = await getSeries();

@@ -2,6 +2,10 @@ jest.mock('next/navigation', () => ({
   redirect: jest.fn(),
 }))
 
+jest.mock('next/cache', () => ({
+  revalidatePath: jest.fn(),
+}))
+
 jest.mock('@/lib/db', () => ({
   prisma: {
     series: {
