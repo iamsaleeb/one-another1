@@ -19,10 +19,10 @@ export default async function ChurchesPage() {
     <div className="flex flex-col min-h-screen">
       <PageHeader title="Churches" description={`${churches.length} churches in your area`} />
 
-      <div className="grid grid-cols-2 gap-3 px-4 py-2 pb-24">
+      <div className="grid grid-cols-4 gap-3 px-4 py-2 pb-24">
         {churches.map((church, i) => (
           <Link key={church.id} href={`/churches/${church.id}`}>
-            <div className="relative aspect-square rounded-2xl overflow-hidden shadow-md">
+            <div className="relative aspect-[2/4] rounded-lg overflow-hidden shadow-md">
               {/* Gradient background */}
               <div className={`absolute inset-0 bg-gradient-to-br ${gradients[i % gradients.length]}`} />
 
