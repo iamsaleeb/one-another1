@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { Church } from "lucide-react";
 import { getChurches } from "@/lib/actions/data";
@@ -12,35 +13,42 @@ const gradients = [
   "from-stone-700 via-stone-500 to-stone-400",
 ];
 
-export default async function ChurchesPage() {
+async function ChurchList() {
   const churches = await getChurches();
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <PageHeader title="Churches" description={`${churches.length} churches in your area`} />
+    <div className="grid grid-cols-4 gap-3 px-4 py-2 pb-24">
+      {churches.map((church, i) => (
+        <Link key={church.id} href={`/churches/${church.id}`}>
+          <div className="relative aspect-[2/4] rounded-lg overflow-hidden shadow-md">
+            {/* Gradient background */}
+            <div className={`absolute inset-0 bg-gradient-to-br ${gradients[i % gradients.length]}`} />
 
-      <div className="grid grid-cols-4 gap-3 px-4 py-2 pb-24">
-        {churches.map((church, i) => (
-          <Link key={church.id} href={`/churches/${church.id}`}>
-            <div className="relative aspect-[2/4] rounded-lg overflow-hidden shadow-md">
-              {/* Gradient background */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${gradients[i % gradients.length]}`} />
-
-              {/* Subtle icon watermark */}
-              <div className="absolute inset-0 flex items-center justify-center opacity-10">
-                <Church className="w-24 h-24 text-white" />
-              </div>
-
-              {/* Bottom gradient overlay + name */}
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pt-10 pb-3 px-3">
-                <p className="text-white text-sm font-bold leading-snug drop-shadow">
-                  {church.name}
-                </p>
-              </div>
+            {/* Subtle icon watermark */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-10">
+              <Church className="w-24 h-24 text-white" />
             </div>
-          </Link>
-        ))}
-      </div>
+
+            {/* Bottom gradient overlay + name */}
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pt-10 pb-3 px-3">
+              <p className="text-white text-sm font-bold leading-snug drop-shadow">
+                {church.name}
+              </p>
+            </div>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+export default function ChurchesPage() {
+  return (
+    <div className="flex flex-col min-h-screen">
+      <PageHeader title="Churches" description="Churches in your area" />
+      <Suspense>
+        <ChurchList />
+      </Suspense>
     </div>
   );
 }
