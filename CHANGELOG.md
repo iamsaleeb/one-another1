@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0](https://github.com/iamsaleeb/one-another/compare/one-another-v0.2.0...one-another-v0.3.0) (2026-03-28)
+
+
+### Features
+
+* added church dynamic data, removed unused info([#17](https://github.com/iamsaleeb/one-another/issues/17)) ([f7ba596](https://github.com/iamsaleeb/one-another/commit/f7ba596db97ff22de521f71007466257e53df69d))
+* added new follow series button ([#10](https://github.com/iamsaleeb/one-another/issues/10)) ([23fd299](https://github.com/iamsaleeb/one-another/commit/23fd29954268f74a58c320f83ba42dfad83219d4))
+
 ## [0.2.0](https://github.com/iamsaleeb/one-another1/compare/one-another-v0.1.0...one-another-v0.2.0) (2026-03-26)
 
 
