@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { UserRole } from "@prisma/client";
@@ -10,7 +11,7 @@ import {
 } from "@/lib/actions/data";
 import { OrganiserTabs } from "./_components/organiser-tabs";
 
-export default async function OrganiserPage() {
+async function OrganiserPageContent() {
   const session = await auth();
 
   if (session?.user?.role !== UserRole.ORGANISER && session?.user?.role !== UserRole.ADMIN) {
@@ -36,5 +37,13 @@ export default async function OrganiserPage() {
         communitySeries={communitySeries}
       />
     </div>
+  );
+}
+
+export default function OrganiserPage() {
+  return (
+    <Suspense>
+      <OrganiserPageContent />
+    </Suspense>
   );
 }

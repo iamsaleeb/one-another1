@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { CacheTag } from "@/lib/cache-tags";
 import { auth } from "@/auth";
 import { UserRole } from "@prisma/client";
 import { prisma } from "@/lib/db";
@@ -52,6 +53,8 @@ export async function addOrganiserToChurchAction(
     });
   });
 
+  revalidateTag(CacheTag.churchOrganisers(churchId), "max");
+  revalidateTag(CacheTag.userChurches(targetUser.id), "max");
   revalidatePath("/admin");
   return { success: "Organiser added successfully." };
 }
@@ -85,6 +88,8 @@ export async function removeOrganiserFromChurchAction(
     });
   }
 
+  revalidateTag(CacheTag.churchOrganisers(churchId), "max");
+  revalidateTag(CacheTag.userChurches(targetUserId), "max");
   revalidatePath("/admin");
   return { success: "Organiser removed." };
 }

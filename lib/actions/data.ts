@@ -1,5 +1,7 @@
+import { cacheTag, cacheLife } from "next/cache";
 import { cache } from "react";
 import { prisma } from "@/lib/db";
+import { CacheTag } from "@/lib/cache-tags";
 import type { Prisma } from "@prisma/client";
 import { startOfDay, endOfDay, addDays, getDay } from "date-fns";
 import type { WhenFilter, TypeFilter } from "@/types/search";
@@ -31,23 +33,32 @@ function getDateRange(when: WhenFilter): { gte: Date; lte: Date } {
   return { gte: startOfDay(saturday), lte: endOfDay(sunday) };
 }
 
-export const getEvents = cache(async function getEvents() {
+export async function getEvents() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CacheTag.events);
   return prisma.event.findMany({
     where: { isPast: false },
     orderBy: { createdAt: "asc" },
     include: { series: { select: { name: true } } },
   });
-});
+}
 
-export const getPastEvents = cache(async function getPastEvents() {
+export async function getPastEvents() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CacheTag.events);
   return prisma.event.findMany({
     where: { isPast: true },
     orderBy: { createdAt: "asc" },
     include: { series: { select: { name: true } } },
   });
-});
+}
 
-export const getEventById = cache(async function getEventById(id: string) {
+export async function getEventById(id: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CacheTag.events, CacheTag.event(id));
   return prisma.event.findUnique({
     where: { id },
     include: {
@@ -56,27 +67,36 @@ export const getEventById = cache(async function getEventById(id: string) {
       _count: { select: { attendees: true } },
     },
   });
-});
+}
 
-export const getChurchesByAdmin = cache(async function getChurchesByAdmin(userId: string) {
+export async function getChurchesByAdmin(userId: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CacheTag.userChurches(userId));
   const assignments = await prisma.churchAdmin.findMany({
     where: { userId },
     select: { church: { select: { id: true, name: true } } },
     orderBy: { church: { name: "asc" } },
   });
   return assignments.map((a) => a.church);
-});
+}
 
-export const getOrganisersByChurch = cache(async function getOrganisersByChurch(churchId: string) {
+export async function getOrganisersByChurch(churchId: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CacheTag.churchOrganisers(churchId));
   const assignments = await prisma.churchOrganiser.findMany({
     where: { churchId },
     select: { user: { select: { id: true, name: true, email: true } } },
     orderBy: { user: { name: "asc" } },
   });
   return assignments.map((a) => a.user);
-});
+}
 
-export const getChurchesByManager = cache(async function getChurchesByManager(userId: string) {
+export async function getChurchesByManager(userId: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CacheTag.userChurches(userId));
   const [organiserRows, adminRows] = await Promise.all([
     prisma.churchOrganiser.findMany({
       where: { userId },
@@ -96,28 +116,40 @@ export const getChurchesByManager = cache(async function getChurchesByManager(us
     }
   }
   return churches.sort((a, b) => a.name.localeCompare(b.name));
-});
+}
 
-export const getChurchesByOrganiser = cache(async function getChurchesByOrganiser(userId: string) {
+export async function getChurchesByOrganiser(userId: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CacheTag.userChurches(userId));
   const assignments = await prisma.churchOrganiser.findMany({
     where: { userId },
     select: { church: { select: { id: true, name: true } } },
     orderBy: { church: { name: "asc" } },
   });
   return assignments.map((a) => a.church);
-});
+}
 
-export const getChurches = cache(async function getChurches() {
+export async function getChurches() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CacheTag.churches);
   return prisma.church.findMany({
     include: {
       serviceTimes: true,
-      events: { where: { isPast: false } },
+      events: {
+        where: { isPast: false },
+        select: { id: true, title: true, datetime: true, location: true },
+      },
     },
     orderBy: { name: "asc" },
   });
-});
+}
 
-export const getChurchById = cache(async function getChurchById(id: string) {
+export async function getChurchById(id: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CacheTag.churches, CacheTag.church(id));
   return prisma.church.findUnique({
     where: { id },
     include: {
@@ -133,8 +165,9 @@ export const getChurchById = cache(async function getChurchById(id: string) {
       _count: { select: { followers: true } },
     },
   });
-});
+}
 
+// Dynamic search — per-request deduplication only (varies by search params)
 export const searchEventsAndChurches = cache(async function searchEventsAndChurches(filters: SearchFilters) {
   const { query, type = "all", category, when } = filters;
   const hasFilters = !!(query || category || when);
@@ -188,7 +221,10 @@ export const searchEventsAndChurches = cache(async function searchEventsAndChurc
   return { events, churches };
 });
 
-export const getSeries = cache(async function getSeries() {
+export async function getSeries() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CacheTag.series);
   return prisma.series.findMany({
     orderBy: { createdAt: "desc" },
     include: {
@@ -197,9 +233,12 @@ export const getSeries = cache(async function getSeries() {
       },
     },
   });
-});
+}
 
-export const getSeriesById = cache(async function getSeriesById(id: string) {
+export async function getSeriesById(id: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CacheTag.series, CacheTag.seriesItem(id));
   return prisma.series.findUnique({
     where: { id },
     include: {
@@ -212,9 +251,12 @@ export const getSeriesById = cache(async function getSeriesById(id: string) {
       _count: { select: { followers: true } },
     },
   });
-});
+}
 
-export const getSeriesByChurchId = cache(async function getSeriesByChurchId(churchId: string) {
+export async function getSeriesByChurchId(churchId: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CacheTag.series, CacheTag.churchSeries(churchId));
   return prisma.series.findMany({
     where: { churchId },
     include: {
@@ -224,9 +266,12 @@ export const getSeriesByChurchId = cache(async function getSeriesByChurchId(chur
     },
     orderBy: { createdAt: "desc" },
   });
-});
+}
 
-export const getEventsByCreator = cache(async function getEventsByCreator(userId: string) {
+export async function getEventsByCreator(userId: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CacheTag.events, CacheTag.userEvents(userId));
   return prisma.event.findMany({
     where: { isPast: false, createdById: userId },
     orderBy: { createdAt: "asc" },
@@ -235,9 +280,12 @@ export const getEventsByCreator = cache(async function getEventsByCreator(userId
       createdBy: { select: { name: true } },
     },
   });
-});
+}
 
-export const getSeriesByCreator = cache(async function getSeriesByCreator(userId: string) {
+export async function getSeriesByCreator(userId: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CacheTag.series, CacheTag.userSeries(userId));
   return prisma.series.findMany({
     where: { createdById: userId },
     orderBy: { createdAt: "desc" },
@@ -246,9 +294,12 @@ export const getSeriesByCreator = cache(async function getSeriesByCreator(userId
       createdBy: { select: { name: true } },
     },
   });
-});
+}
 
-export const getEventsNotByCreator = cache(async function getEventsNotByCreator(userId: string) {
+export async function getEventsNotByCreator(userId: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CacheTag.events);
   return prisma.event.findMany({
     where: {
       isPast: false,
@@ -260,17 +311,23 @@ export const getEventsNotByCreator = cache(async function getEventsNotByCreator(
       createdBy: { select: { name: true } },
     },
   });
-});
+}
 
-export const getEventAttendees = cache(async function getEventAttendees(eventId: string) {
+export async function getEventAttendees(eventId: string) {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(CacheTag.eventAttendees(eventId));
   return prisma.eventAttendee.findMany({
     where: { eventId },
     include: { user: { select: { id: true, name: true, email: true } } },
     orderBy: { createdAt: "asc" },
   });
-});
+}
 
-export const getSeriesNotByCreator = cache(async function getSeriesNotByCreator(userId: string) {
+export async function getSeriesNotByCreator(userId: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CacheTag.series);
   return prisma.series.findMany({
     where: {
       OR: [{ createdById: { not: userId } }, { createdById: null }],
@@ -281,4 +338,4 @@ export const getSeriesNotByCreator = cache(async function getSeriesNotByCreator(
       createdBy: { select: { name: true } },
     },
   });
-});
+}

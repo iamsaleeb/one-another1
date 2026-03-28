@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { CacheTag } from "@/lib/cache-tags";
 import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
 
@@ -16,6 +17,8 @@ export async function followChurchAction(churchId: string): Promise<FollowChurch
     data: { churchId, userId: session.user.id },
   });
 
+  revalidateTag(CacheTag.churches, "max");
+  revalidateTag(CacheTag.church(churchId), "max");
   revalidatePath(`/churches/${churchId}`);
   return {};
 }
@@ -28,6 +31,8 @@ export async function unfollowChurchAction(churchId: string): Promise<FollowChur
     where: { churchId_userId: { churchId, userId: session.user.id } },
   });
 
+  revalidateTag(CacheTag.churches, "max");
+  revalidateTag(CacheTag.church(churchId), "max");
   revalidatePath(`/churches/${churchId}`);
   return {};
 }

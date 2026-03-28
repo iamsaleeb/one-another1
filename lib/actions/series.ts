@@ -1,7 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { CacheTag } from "@/lib/cache-tags";
 import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
 import { UserRole } from "@prisma/client";
@@ -38,6 +39,7 @@ export async function createSeriesAction(data: CreateSeriesInput): Promise<Actio
     },
   });
 
+  revalidateTag(CacheTag.series, "max");
   revalidatePath("/");
   redirect(`/series/${created.id}`);
 }
@@ -61,6 +63,8 @@ export async function updateSeriesAction(id: string, data: CreateSeriesInput): P
     data: { name, description, cadence, location, host, tag, churchId },
   });
 
+  revalidateTag(CacheTag.series, "max");
+  revalidateTag(CacheTag.seriesItem(id), "max");
   revalidatePath("/");
   redirect(`/series/${id}`);
 }
@@ -73,6 +77,7 @@ export async function followSeriesAction(seriesId: string): Promise<void> {
     data: { seriesId, userId: session.user.id },
   });
 
+  revalidateTag(CacheTag.seriesItem(seriesId), "max");
   revalidatePath(`/series/${seriesId}`);
 }
 
@@ -84,6 +89,7 @@ export async function unfollowSeriesAction(seriesId: string): Promise<void> {
     where: { seriesId_userId: { seriesId, userId: session.user.id } },
   });
 
+  revalidateTag(CacheTag.seriesItem(seriesId), "max");
   revalidatePath(`/series/${seriesId}`);
 }
 
@@ -98,6 +104,8 @@ export async function deleteSeriesAction(id: string): Promise<void> {
   if (!allowed) redirect("/");
 
   await prisma.series.delete({ where: { id } });
+  revalidateTag(CacheTag.series, "max");
+  revalidateTag(CacheTag.seriesItem(id), "max");
   revalidatePath("/");
   redirect("/organiser");
 }

@@ -1,5 +1,6 @@
 jest.mock('next/cache', () => ({
   revalidatePath: jest.fn(),
+  revalidateTag: jest.fn(),
 }))
 
 jest.mock('@/lib/db', () => ({

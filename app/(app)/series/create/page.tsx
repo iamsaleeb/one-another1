@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { UserRole } from "@prisma/client";
@@ -5,7 +6,7 @@ import { CreateSeriesForm } from "./_components/create-series-form";
 import { PageHeader } from "@/components/ui/page-header";
 import { getChurchesByManager } from "@/lib/actions/data";
 
-export default async function CreateSeriesPage() {
+async function CreateSeriesPageContent() {
   const session = await auth();
 
   if (session?.user?.role !== UserRole.ORGANISER && session?.user?.role !== UserRole.ADMIN) {
@@ -23,5 +24,13 @@ export default async function CreateSeriesPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CreateSeriesPage() {
+  return (
+    <Suspense>
+      <CreateSeriesPageContent />
+    </Suspense>
   );
 }

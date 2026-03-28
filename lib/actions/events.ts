@@ -1,7 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { CacheTag } from "@/lib/cache-tags";
 import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
 import { UserRole } from "@prisma/client";
@@ -57,6 +58,7 @@ export async function createEventAction(data: CreateEventInput): Promise<ActionR
     },
   });
 
+  revalidateTag(CacheTag.events, "max");
   revalidatePath("/");
   redirect(seriesId ? `/series/${seriesId}` : "/my-events");
 }
@@ -105,6 +107,8 @@ export async function updateEventAction(id: string, data: CreateEventInput): Pro
     },
   });
 
+  revalidateTag(CacheTag.events, "max");
+  revalidateTag(CacheTag.event(id), "max");
   revalidatePath("/");
   redirect(`/events/${id}`);
 }
@@ -124,6 +128,8 @@ export async function cancelEventAction(id: string, reason: string): Promise<voi
     data: { cancelledAt: new Date(), cancellationReason: reason },
   });
 
+  revalidateTag(CacheTag.events, "max");
+  revalidateTag(CacheTag.event(id), "max");
   revalidatePath("/");
   redirect(`/events/${id}`);
 }
@@ -143,6 +149,8 @@ export async function uncancelEventAction(id: string): Promise<void> {
     data: { cancelledAt: null, cancellationReason: null },
   });
 
+  revalidateTag(CacheTag.events, "max");
+  revalidateTag(CacheTag.event(id), "max");
   revalidatePath("/");
   redirect(`/events/${id}`);
 }
@@ -158,6 +166,8 @@ export async function deleteEventAction(id: string): Promise<void> {
   if (!allowed) redirect("/");
 
   await prisma.event.delete({ where: { id } });
+  revalidateTag(CacheTag.events, "max");
+  revalidateTag(CacheTag.event(id), "max");
   revalidatePath("/");
   redirect("/organiser");
 }
@@ -174,6 +184,8 @@ export async function attendEventAction(eventId: string): Promise<AttendEventSta
     data: { eventId, userId: session.user.id },
   });
 
+  revalidateTag(CacheTag.event(eventId), "max");
+  revalidateTag(CacheTag.eventAttendees(eventId), "max");
   revalidatePath(`/events/${eventId}`);
   return {};
 }
@@ -186,6 +198,8 @@ export async function unattendEventAction(eventId: string): Promise<AttendEventS
     where: { eventId_userId: { eventId, userId: session.user.id } },
   });
 
+  revalidateTag(CacheTag.event(eventId), "max");
+  revalidateTag(CacheTag.eventAttendees(eventId), "max");
   revalidatePath(`/events/${eventId}`);
   return {};
 }
@@ -228,6 +242,8 @@ export async function registerEventAction(
     },
   });
 
+  revalidateTag(CacheTag.event(eventId), "max");
+  revalidateTag(CacheTag.eventAttendees(eventId), "max");
   revalidatePath(`/events/${eventId}`);
   return { success: true };
 }

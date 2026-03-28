@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
@@ -10,7 +11,7 @@ interface Props {
   searchParams: Promise<{ seriesId?: string }>;
 }
 
-export default async function CreateEventPage({ searchParams }: Props) {
+async function CreateEventPageContent({ searchParams }: Props) {
   const session = await auth();
 
   if (session?.user?.role !== UserRole.ORGANISER && session?.user?.role !== UserRole.ADMIN) {
@@ -38,5 +39,13 @@ export default async function CreateEventPage({ searchParams }: Props) {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CreateEventPage(props: Props) {
+  return (
+    <Suspense>
+      <CreateEventPageContent {...props} />
+    </Suspense>
   );
 }

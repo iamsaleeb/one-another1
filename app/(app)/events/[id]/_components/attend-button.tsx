@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useOptimistic, useTransition } from "react";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { attendEventAction, unattendEventAction } from "@/lib/actions/events";
@@ -12,10 +12,12 @@ interface AttendButtonProps {
 
 export function AttendButton({ eventId, isAttending }: AttendButtonProps) {
   const [isPending, startTransition] = useTransition();
+  const [optimisticAttending, setOptimisticAttending] = useOptimistic(isAttending);
 
   function handleClick() {
     startTransition(async () => {
-      if (isAttending) {
+      setOptimisticAttending(!optimisticAttending);
+      if (optimisticAttending) {
         await unattendEventAction(eventId);
       } else {
         await attendEventAction(eventId);
@@ -27,11 +29,11 @@ export function AttendButton({ eventId, isAttending }: AttendButtonProps) {
     <Button
       onClick={handleClick}
       disabled={isPending}
-      variant={isAttending ? "outline" : "default"}
-      className={isAttending ? "gap-1.5" : ""}
+      variant={optimisticAttending ? "outline" : "default"}
+      className={optimisticAttending ? "gap-1.5" : ""}
     >
-      {isAttending && <Check className="size-4" />}
-      {isPending ? "..." : isAttending ? "Attending" : "Attend"}
+      {optimisticAttending && <Check className="size-4" />}
+      {optimisticAttending ? "Attending" : "Attend"}
     </Button>
   );
 }

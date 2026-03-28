@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { auth } from "@/auth";
 import { signOutAction } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
   title: "Profile — One Another",
 };
 
-export default async function ProfilePage() {
+async function ProfilePageContent() {
   const session = await auth();
   const user = session?.user;
 
@@ -60,5 +61,13 @@ export default async function ProfilePage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense>
+      <ProfilePageContent />
+    </Suspense>
   );
 }

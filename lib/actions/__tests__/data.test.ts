@@ -1,3 +1,8 @@
+jest.mock('next/cache', () => ({
+  cacheTag: jest.fn(),
+  cacheLife: jest.fn(),
+}))
+
 jest.mock('react', () => ({
   ...jest.requireActual('react'),
   cache: (fn: (...args: unknown[]) => unknown) => fn,
@@ -253,7 +258,7 @@ describe('getChurches', () => {
     expect(mockChurchFindMany).toHaveBeenCalledWith({
       include: {
         serviceTimes: true,
-        events: { where: { isPast: false } },
+        events: { where: { isPast: false }, select: { id: true, title: true, datetime: true, location: true } },
       },
       orderBy: { name: 'asc' },
     })

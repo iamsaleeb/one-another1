@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { UserRole } from "@prisma/client";
@@ -5,7 +6,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { prisma } from "@/lib/db";
 import { AdminChurchCard } from "./_components/admin-church-card";
 
-export default async function AdminPage() {
+async function AdminPageContent() {
   const session = await auth();
 
   if (session?.user?.role !== UserRole.ADMIN) {
@@ -49,5 +50,13 @@ export default async function AdminPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AdminPage() {
+  return (
+    <Suspense>
+      <AdminPageContent />
+    </Suspense>
   );
 }

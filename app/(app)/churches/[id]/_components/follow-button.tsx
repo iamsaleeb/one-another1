@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useOptimistic, useTransition } from "react";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { followChurchAction, unfollowChurchAction } from "@/lib/actions/churches";
@@ -13,10 +13,16 @@ interface FollowButtonProps {
 
 export function FollowButton({ churchId, isFollowing, followerCount }: FollowButtonProps) {
   const [isPending, startTransition] = useTransition();
+  const [optimisticFollowing, setOptimisticFollowing] = useOptimistic(isFollowing);
+
+  const displayCount = optimisticFollowing !== isFollowing
+    ? optimisticFollowing ? followerCount + 1 : followerCount - 1
+    : followerCount;
 
   function handleClick() {
     startTransition(async () => {
-      if (isFollowing) {
+      setOptimisticFollowing(!optimisticFollowing);
+      if (optimisticFollowing) {
         await unfollowChurchAction(churchId);
       } else {
         await followChurchAction(churchId);
@@ -29,14 +35,14 @@ export function FollowButton({ churchId, isFollowing, followerCount }: FollowBut
       <Button
         onClick={handleClick}
         disabled={isPending}
-        variant={isFollowing ? "outline" : "default"}
-        className={isFollowing ? "gap-1.5" : ""}
+        variant={optimisticFollowing ? "outline" : "default"}
+        className={optimisticFollowing ? "gap-1.5" : ""}
       >
-        {isFollowing && <Check className="size-4" />}
-        {isPending ? "..." : isFollowing ? "Following" : "Follow"}
+        {optimisticFollowing && <Check className="size-4" />}
+        {optimisticFollowing ? "Following" : "Follow"}
       </Button>
       <span className="text-xs text-muted-foreground">
-        {followerCount} {followerCount === 1 ? "follower" : "followers"}
+        {displayCount} {displayCount === 1 ? "follower" : "followers"}
       </span>
     </div>
   );
