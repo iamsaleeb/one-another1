@@ -31,8 +31,7 @@ export function EventCard({ event }: EventCardProps) {
                 src={event.photoUrl}
                 alt=""
                 fill
-                loading="eager"
-                className="object-cover"
+className="object-cover"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
             </div>

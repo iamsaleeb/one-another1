@@ -144,6 +144,26 @@ describe('createSeriesAction', () => {
     expect(result.error).toBe('You are not assigned to this church.')
     expect(mockSeriesCreate).not.toHaveBeenCalled()
   })
+
+  it('persists photoUrl when provided', async () => {
+    mockSeriesCreate.mockResolvedValue({ id: 'ser-photo', ...validData })
+
+    await createSeriesAction({ ...validData, photoUrl: 'https://utfs.io/f/photo.jpg' })
+
+    expect(mockSeriesCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({ photoUrl: 'https://utfs.io/f/photo.jpg' }),
+    })
+  })
+
+  it('sets photoUrl to null when not provided', async () => {
+    mockSeriesCreate.mockResolvedValue({ id: 'ser-no-photo', ...validData })
+
+    await createSeriesAction(validData)
+
+    expect(mockSeriesCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({ photoUrl: null }),
+    })
+  })
 })
 
 describe('followSeriesAction', () => {

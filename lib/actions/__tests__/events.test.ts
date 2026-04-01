@@ -304,6 +304,30 @@ describe('createEventAction', () => {
       expect.objectContaining({ type: 'new_session', seriesId: 'ser-1' })
     )
   })
+
+  it('persists photoUrl when provided', async () => {
+    mockEventCreate.mockResolvedValue({ id: 'evt-photo' })
+
+    await createEventAction({ ...validData, photoUrl: 'https://utfs.io/f/photo.jpg' })
+
+    expect(mockEventCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ photoUrl: 'https://utfs.io/f/photo.jpg' }),
+      })
+    )
+  })
+
+  it('sets photoUrl to null when not provided', async () => {
+    mockEventCreate.mockResolvedValue({ id: 'evt-no-photo' })
+
+    await createEventAction(validData)
+
+    expect(mockEventCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ photoUrl: null }),
+      })
+    )
+  })
 })
 
 describe('cancelEventAction', () => {
@@ -747,6 +771,32 @@ describe('updateEventAction', () => {
     await updateEventAction('evt-1', { ...validData, date: '2026-05-10' })
 
     expect(mockRedirect).toHaveBeenCalledWith('/events/evt-1')
+  })
+
+  it('persists photoUrl when provided', async () => {
+    mockEventFindUnique.mockResolvedValue(existingPublished)
+    mockEventUpdate.mockResolvedValue({})
+
+    await updateEventAction('evt-1', { ...validData, photoUrl: 'https://utfs.io/f/photo.jpg' })
+
+    expect(mockEventUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ photoUrl: 'https://utfs.io/f/photo.jpg' }),
+      })
+    )
+  })
+
+  it('sets photoUrl to null when not provided', async () => {
+    mockEventFindUnique.mockResolvedValue(existingPublished)
+    mockEventUpdate.mockResolvedValue({})
+
+    await updateEventAction('evt-1', validData)
+
+    expect(mockEventUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ photoUrl: null }),
+      })
+    )
   })
 })
 

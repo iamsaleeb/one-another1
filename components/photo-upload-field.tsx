@@ -56,9 +56,14 @@ export function PhotoUploadField({ value, onChange }: PhotoUploadFieldProps) {
       <UploadDropzone
         endpoint="coverPhoto"
         onClientUploadComplete={(res) => {
+          const url = res?.[0]?.ufsUrl;
+          if (!url) {
+            setUploadError("Upload finished but no file URL was returned. Please try again.");
+            return;
+          }
           setUploadError(null);
-          setLocalUrl(res[0].ufsUrl);
-          onChange(res[0].ufsUrl);
+          setLocalUrl(url);
+          onChange(url);
         }}
         onUploadError={(error) => {
           setUploadError(error.message);
