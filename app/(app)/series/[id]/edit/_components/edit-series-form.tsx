@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/form";
 import { createSeriesSchema, type CreateSeriesInput } from "@/lib/validations/series";
 import { updateSeriesAction } from "@/lib/actions/series";
+import { PhotoUploadField } from "@/components/photo-upload-field";
 
 const CATEGORIES = [
   "Worship",
@@ -50,6 +51,7 @@ interface SeriesData {
   host: string;
   tag: string;
   churchId?: string | null;
+  photoUrl?: string | null;
 }
 
 export function EditSeriesForm({
@@ -69,6 +71,7 @@ export function EditSeriesForm({
       host: series.host,
       tag: series.tag,
       churchId: series.churchId ?? "",
+      photoUrl: series.photoUrl ?? undefined,
     },
   });
 
@@ -94,6 +97,20 @@ export function EditSeriesForm({
             {form.formState.errors.root.message}
           </p>
         )}
+
+        <FormField
+          control={form.control}
+          name="photoUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Cover Photo (optional)</FormLabel>
+              <FormControl>
+                <PhotoUploadField value={field.value} onChange={field.onChange} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}

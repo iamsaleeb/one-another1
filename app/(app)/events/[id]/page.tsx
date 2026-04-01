@@ -45,7 +45,7 @@ export default async function EventDetailPage({ params }: Props) {
 
   return (
     <div className="bg-background">
-      <HeroBanner size="md" />
+      <HeroBanner size="md" photoUrl={event.photoUrl ?? undefined} />
 
       {/* Content */}
       <div className="flex flex-col gap-4 px-4 pt-5 pb-28">

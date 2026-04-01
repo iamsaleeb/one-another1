@@ -20,7 +20,7 @@ export async function createSeriesAction(data: CreateSeriesInput): Promise<Actio
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  const { name, description, cadence, location, host, tag, churchId } = parsed.data;
+  const { name, description, cadence, location, host, tag, churchId, photoUrl } = parsed.data;
 
   const allowed = await canManageChurch(session.user.id, session.user.role, churchId);
   if (!allowed) return { error: "You are not assigned to this church." };
@@ -34,6 +34,7 @@ export async function createSeriesAction(data: CreateSeriesInput): Promise<Actio
       host,
       tag,
       churchId,
+      photoUrl: photoUrl ?? null,
       ...(session?.user?.id ? { createdById: session.user.id } : {}),
     },
   });
@@ -51,7 +52,7 @@ export async function updateSeriesAction(id: string, data: CreateSeriesInput): P
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  const { name, description, cadence, location, host, tag, churchId } = parsed.data;
+  const { name, description, cadence, location, host, tag, churchId, photoUrl } = parsed.data;
 
   const existing = await prisma.series.findUnique({ where: { id }, select: { churchId: true } });
   if (!existing) redirect("/organiser");
@@ -66,7 +67,7 @@ export async function updateSeriesAction(id: string, data: CreateSeriesInput): P
 
   await prisma.series.update({
     where: { id },
-    data: { name, description, cadence, location, host, tag, churchId },
+    data: { name, description, cadence, location, host, tag, churchId, photoUrl: photoUrl ?? null },
   });
 
   revalidatePath("/");

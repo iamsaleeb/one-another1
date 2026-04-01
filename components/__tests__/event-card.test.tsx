@@ -50,6 +50,17 @@ describe('EventCard', () => {
     expect(screen.getByText('Youth Night')).toBeInTheDocument()
   })
 
+  it('renders a cover photo when photoUrl is provided', () => {
+    const eventWithPhoto = { ...sampleEvent, photoUrl: 'https://utfs.io/f/photo.jpg' }
+    const { container } = render(<EventCard event={eventWithPhoto} />)
+    expect(container.querySelector('img')).toBeInTheDocument()
+  })
+
+  it('does not render an img when photoUrl is not provided', () => {
+    const { container } = render(<EventCard event={sampleEvent} />)
+    expect(container.querySelector('img')).not.toBeInTheDocument()
+  })
+
   it('shows a Cancelled badge instead of the tag when cancelledAt is set', () => {
     const cancelledEvent = { ...sampleEvent, cancelledAt: new Date() }
     render(<EventCard event={cancelledEvent} />)

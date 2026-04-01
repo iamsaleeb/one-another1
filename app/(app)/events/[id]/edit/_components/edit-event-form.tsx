@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/form";
 import { createEventSchema, type CreateEventInput } from "@/lib/validations/event";
 import { updateEventAction, publishEventAction, unpublishEventAction } from "@/lib/actions/events";
+import { PhotoUploadField } from "@/components/photo-upload-field";
 
 const CATEGORIES = [
   "Worship",
@@ -50,6 +51,7 @@ interface EventData {
   churchId?: string | null;
   seriesId?: string | null;
   seriesName?: string | null;
+  photoUrl?: string | null;
   requiresRegistration: boolean;
   capacity?: number | null;
   collectPhone: boolean;
@@ -82,6 +84,7 @@ export function EditEventForm({
       collectPhone: event.collectPhone,
       collectNotes: event.collectNotes,
       price: event.price ?? undefined,
+      photoUrl: event.photoUrl ?? undefined,
     },
   });
 
@@ -132,6 +135,20 @@ export function EditEventForm({
             {form.formState.errors.root.message}
           </p>
         )}
+
+        <FormField
+          control={form.control}
+          name="photoUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Cover Photo (optional)</FormLabel>
+              <FormControl>
+                <PhotoUploadField value={field.value} onChange={field.onChange} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}

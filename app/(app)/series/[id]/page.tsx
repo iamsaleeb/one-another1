@@ -34,7 +34,7 @@ export default async function SeriesDetailPage({ params }: Props) {
 
   return (
     <div className="bg-background">
-      <HeroBanner size="sm" />
+      <HeroBanner size="sm" photoUrl={series.photoUrl ?? undefined} />
 
       <div className="flex flex-col gap-4 px-4 pt-5 pb-28">
         {/* Info card */}

@@ -27,7 +27,7 @@ export async function createEventAction(data: CreateEventInput): Promise<ActionR
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  const { title, date, time, location, host, tag, description, seriesId, requiresRegistration, capacity, collectPhone, collectNotes, price, isDraft } = parsed.data;
+  const { title, date, time, location, host, tag, description, seriesId, requiresRegistration, capacity, collectPhone, collectNotes, price, isDraft, photoUrl } = parsed.data;
   let { churchId } = parsed.data;
 
   const datetime = new Date(`${date}T${time}`);
@@ -59,6 +59,7 @@ export async function createEventAction(data: CreateEventInput): Promise<ActionR
       collectPhone: requiresRegistration ? (collectPhone ?? false) : false,
       collectNotes: requiresRegistration ? (collectNotes ?? false) : false,
       price: price ?? null,
+      photoUrl: photoUrl ?? null,
       churchId,
       ...(seriesId ? { seriesId } : {}),
       ...(session?.user?.id ? { createdById: session.user.id } : {}),
@@ -100,7 +101,7 @@ export async function updateEventAction(id: string, data: CreateEventInput): Pro
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  const { title, date, time, location, host, tag, description, seriesId, requiresRegistration, capacity, collectPhone, collectNotes, price } = parsed.data;
+  const { title, date, time, location, host, tag, description, seriesId, requiresRegistration, capacity, collectPhone, collectNotes, price, photoUrl } = parsed.data;
   let { churchId } = parsed.data;
   const newDatetime = new Date(`${date}T${time}`);
 
@@ -142,6 +143,7 @@ export async function updateEventAction(id: string, data: CreateEventInput): Pro
       collectPhone: requiresRegistration ? (collectPhone ?? false) : false,
       collectNotes: requiresRegistration ? (collectNotes ?? false) : false,
       price: price ?? null,
+      photoUrl: photoUrl ?? null,
       churchId,
       seriesId: seriesId ?? null,
     },
