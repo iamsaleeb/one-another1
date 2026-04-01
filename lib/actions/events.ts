@@ -147,7 +147,7 @@ export async function updateEventAction(id: string, data: CreateEventInput): Pro
     },
   });
 
-  if (existing && newDatetime.getTime() !== existing.datetime.getTime()) {
+  if (existing && !existing.isDraft && newDatetime.getTime() !== existing.datetime.getTime()) {
     try {
       await rescheduleEventReminders(id, newDatetime);
 
@@ -244,14 +244,32 @@ export async function publishEventAction(id: string): Promise<ActionResult> {
 
   const event = await prisma.event.findUnique({
     where: { id },
-    select: { churchId: true, seriesId: true, title: true },
+    select: { churchId: true, seriesId: true, title: true, isDraft: true, datetime: true },
   });
   if (!event) redirect("/organiser");
 
   const allowed = await canManageChurch(session.user.id, session.user.role, event.churchId);
   if (!allowed) return { error: "You are not assigned to this church." };
 
+  if (!event.isDraft) {
+    redirect(`/events/${id}`);
+  }
+
   await prisma.event.update({ where: { id }, data: { isDraft: false } });
+
+  try {
+    const attendees = await prisma.eventAttendee.findMany({
+      where: { eventId: id },
+      select: { userId: true },
+    });
+    await Promise.all(
+      attendees.map((a) =>
+        scheduleEventReminder(a.userId, { id, title: event.title, datetime: event.datetime })
+      )
+    );
+  } catch (err) {
+    console.error("Failed to schedule reminders on publish:", err);
+  }
 
   if (event.seriesId) {
     try {
@@ -291,6 +309,12 @@ export async function unpublishEventAction(id: string): Promise<ActionResult> {
   if (!allowed) return { error: "You are not assigned to this church." };
 
   await prisma.event.update({ where: { id }, data: { isDraft: true } });
+
+  try {
+    await cancelAllRemindersForEvent(id);
+  } catch (err) {
+    console.error("Failed to cancel reminders on unpublish:", err);
+  }
 
   revalidatePath("/");
   redirect(`/events/${id}`);

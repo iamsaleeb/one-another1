@@ -245,7 +245,7 @@ describe('createEventAction', () => {
     )
   })
 
-  it('saves isDraft=true and redirects to the edit page when saving as draft', async () => {
+  it('saves isDraft=true and redirects to the organiser page when saving as draft', async () => {
     mockEventCreate.mockResolvedValue({ id: 'evt-draft' })
 
     await createEventAction({ ...validData, isDraft: true })
@@ -457,9 +457,14 @@ describe('registerEventAction', () => {
 })
 
 describe('publishEventAction', () => {
-  it('sets isDraft to false and redirects to the event page', async () => {
-    mockEventFindUnique.mockResolvedValue({ churchId: 'ch-1', seriesId: null, title: 'Test' })
+  const mockScheduleReminder = jest.requireMock('@/lib/schedule-notification').scheduleEventReminder as jest.Mock
+  const mockEventAttendeeFindMany = prisma.eventAttendee.findMany as jest.Mock
+
+  it('sets isDraft to false, schedules reminders for attendees, and redirects to the event page', async () => {
+    const datetime = new Date('2026-05-01T09:00:00Z')
+    mockEventFindUnique.mockResolvedValue({ churchId: 'ch-1', seriesId: null, title: 'Test', isDraft: true, datetime })
     mockEventUpdate.mockResolvedValue({})
+    mockEventAttendeeFindMany.mockResolvedValue([{ userId: 'user-2' }, { userId: 'user-3' }])
 
     await publishEventAction('evt-1')
 
@@ -467,7 +472,30 @@ describe('publishEventAction', () => {
       where: { id: 'evt-1' },
       data: { isDraft: false },
     })
+    expect(mockScheduleReminder).toHaveBeenCalledTimes(2)
+    expect(mockScheduleReminder).toHaveBeenCalledWith('user-2', { id: 'evt-1', title: 'Test', datetime })
+    expect(mockScheduleReminder).toHaveBeenCalledWith('user-3', { id: 'evt-1', title: 'Test', datetime })
     expect(mockRevalidatePath).toHaveBeenCalledWith('/')
+    expect(mockRedirect).toHaveBeenCalledWith('/events/evt-1')
+  })
+
+  it('schedules no reminders when there are no attendees', async () => {
+    mockEventFindUnique.mockResolvedValue({ churchId: 'ch-1', seriesId: null, title: 'Test', isDraft: true, datetime: new Date() })
+    mockEventUpdate.mockResolvedValue({})
+    mockEventAttendeeFindMany.mockResolvedValue([])
+
+    await publishEventAction('evt-1')
+
+    expect(mockScheduleReminder).not.toHaveBeenCalled()
+  })
+
+  it('short-circuits without updating when the event is already published', async () => {
+    mockEventFindUnique.mockResolvedValue({ churchId: 'ch-1', seriesId: null, title: 'Test', isDraft: false })
+    mockRedirect.mockImplementationOnce(() => { throw new Error('NEXT_REDIRECT') })
+
+    await expect(publishEventAction('evt-1')).rejects.toThrow('NEXT_REDIRECT')
+
+    expect(mockEventUpdate).not.toHaveBeenCalled()
     expect(mockRedirect).toHaveBeenCalledWith('/events/evt-1')
   })
 
@@ -481,7 +509,7 @@ describe('publishEventAction', () => {
   })
 
   it('returns an error when the organiser cannot manage the church', async () => {
-    mockEventFindUnique.mockResolvedValue({ churchId: 'ch-1', seriesId: null, title: 'Test' })
+    mockEventFindUnique.mockResolvedValue({ churchId: 'ch-1', seriesId: null, title: 'Test', isDraft: true })
     mockCanManageChurch.mockResolvedValue(false)
 
     const result = await publishEventAction('evt-1')
@@ -492,7 +520,9 @@ describe('publishEventAction', () => {
 })
 
 describe('unpublishEventAction', () => {
-  it('sets isDraft to true and redirects to the event page', async () => {
+  const mockCancelAll = jest.requireMock('@/lib/schedule-notification').cancelAllRemindersForEvent as jest.Mock
+
+  it('sets isDraft to true, cancels pending reminders, and redirects to the event page', async () => {
     mockEventFindUnique.mockResolvedValue({ churchId: 'ch-1' })
     mockEventUpdate.mockResolvedValue({})
 
@@ -502,6 +532,7 @@ describe('unpublishEventAction', () => {
       where: { id: 'evt-1' },
       data: { isDraft: true },
     })
+    expect(mockCancelAll).toHaveBeenCalledWith('evt-1')
     expect(mockRevalidatePath).toHaveBeenCalledWith('/')
     expect(mockRedirect).toHaveBeenCalledWith('/events/evt-1')
   })
