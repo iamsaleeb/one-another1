@@ -34,6 +34,7 @@ export default async function EditSeriesPage({ params }: Props) {
               host: series.host,
               tag: series.tag,
               churchId: series.churchId,
+              photoUrl: series.photoUrl,
             }}
             churches={churches}
           />

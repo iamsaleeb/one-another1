@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/form";
 import { createSeriesSchema, type CreateSeriesInput } from "@/lib/validations/series";
 import { createSeriesAction } from "@/lib/actions/series";
+import { PhotoUploadField } from "@/components/photo-upload-field";
 
 const CATEGORIES = [
   "Worship",
@@ -52,6 +53,7 @@ export function CreateSeriesForm({ churches }: { churches: Church[] }) {
       host: "",
       tag: "",
       churchId: "",
+      photoUrl: undefined,
     },
   });
 
@@ -77,6 +79,20 @@ export function CreateSeriesForm({ churches }: { churches: Church[] }) {
             {form.formState.errors.root.message}
           </p>
         )}
+
+        <FormField
+          control={form.control}
+          name="photoUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Cover Photo (optional)</FormLabel>
+              <FormControl>
+                <PhotoUploadField value={field.value} onChange={field.onChange} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}

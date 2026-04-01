@@ -9,6 +9,18 @@ const nextConfig: NextConfig = {
     "10.0.2.2",       // Android emulator
     "192.168.0.3",    // physical device on LAN
   ],
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "utfs.io",
+      },
+      {
+        protocol: "https",
+        hostname: "*.ufs.sh",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/form";
 import { createEventSchema, type CreateEventInput } from "@/lib/validations/event";
 import { createEventAction } from "@/lib/actions/events";
+import { PhotoUploadField } from "@/components/photo-upload-field";
 
 const CATEGORIES = [
   "Worship",
@@ -63,6 +64,7 @@ export function CreateEventForm({
       collectNotes: false,
       price: undefined,
       isDraft: false,
+      photoUrl: undefined,
     },
   });
 
@@ -105,6 +107,20 @@ export function CreateEventForm({
             {form.formState.errors.root.message}
           </p>
         )}
+
+        <FormField
+          control={form.control}
+          name="photoUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Cover Photo (optional)</FormLabel>
+              <FormControl>
+                <PhotoUploadField value={field.value} onChange={field.onChange} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}

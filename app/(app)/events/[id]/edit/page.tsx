@@ -46,6 +46,7 @@ export default async function EditEventPage({ params }: Props) {
             collectNotes: event.collectNotes,
             price: event.price,
             isDraft: event.isDraft,
+            photoUrl: event.photoUrl,
           }}
           churches={churches}
         />

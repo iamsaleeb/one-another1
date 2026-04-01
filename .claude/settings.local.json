@@ -71,7 +71,8 @@
       "Bash(ls /c/code/one-another1/app/\\\\\\(app\\\\\\)/events/create)",
       "Bash(ls /c/code/one-another1/app/\\\\\\(app\\\\\\)/series/create)",
       "Bash(gh pr:*)",
-      "Bash(gh api:*)"
+      "Bash(gh api:*)",
+      "WebFetch(domain:api.github.com)"
     ]
   },
   "enableAllProjectMcpServers": true,

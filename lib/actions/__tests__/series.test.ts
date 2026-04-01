@@ -11,6 +11,8 @@ jest.mock('@/lib/db', () => ({
     series: {
       create: jest.fn(),
       findUnique: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
     },
     seriesFollower: {
       create: jest.fn(),
@@ -29,7 +31,7 @@ jest.mock('@/lib/permissions', () => ({
 
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { createSeriesAction, followSeriesAction, unfollowSeriesAction } from '@/lib/actions/series'
+import { createSeriesAction, updateSeriesAction, deleteSeriesAction, followSeriesAction, unfollowSeriesAction } from '@/lib/actions/series'
 import { prisma } from '@/lib/db'
 import { auth } from '@/auth'
 import { canManageChurch } from '@/lib/permissions'
@@ -37,6 +39,9 @@ import { canManageChurch } from '@/lib/permissions'
 const mockRedirect = redirect as unknown as jest.Mock
 const mockRevalidatePath = revalidatePath as jest.Mock
 const mockSeriesCreate = prisma.series.create as jest.Mock
+const mockSeriesUpdate = prisma.series.update as jest.Mock
+const mockSeriesDelete = prisma.series.delete as jest.Mock
+const mockSeriesFindUnique = prisma.series.findUnique as jest.Mock
 const mockSeriesFollowerCreate = prisma.seriesFollower.create as jest.Mock
 const mockSeriesFollowerDelete = prisma.seriesFollower.delete as jest.Mock
 const mockAuth = auth as jest.Mock
@@ -139,6 +144,26 @@ describe('createSeriesAction', () => {
     expect(result.error).toBe('You are not assigned to this church.')
     expect(mockSeriesCreate).not.toHaveBeenCalled()
   })
+
+  it('persists photoUrl when provided', async () => {
+    mockSeriesCreate.mockResolvedValue({ id: 'ser-photo', ...validData })
+
+    await createSeriesAction({ ...validData, photoUrl: 'https://utfs.io/f/photo.jpg' })
+
+    expect(mockSeriesCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({ photoUrl: 'https://utfs.io/f/photo.jpg' }),
+    })
+  })
+
+  it('sets photoUrl to null when not provided', async () => {
+    mockSeriesCreate.mockResolvedValue({ id: 'ser-no-photo', ...validData })
+
+    await createSeriesAction(validData)
+
+    expect(mockSeriesCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({ photoUrl: null }),
+    })
+  })
 })
 
 describe('followSeriesAction', () => {
@@ -180,5 +205,130 @@ describe('unfollowSeriesAction', () => {
     await unfollowSeriesAction('ser-1')
 
     expect(mockSeriesFollowerDelete).not.toHaveBeenCalled()
+  })
+})
+
+describe('updateSeriesAction', () => {
+  const existing = { churchId: 'ch-1' }
+
+  beforeEach(() => {
+    mockSeriesFindUnique.mockResolvedValue(existing)
+    mockSeriesUpdate.mockResolvedValue({})
+  })
+
+  it('updates the series and redirects to its detail page', async () => {
+    await updateSeriesAction('ser-1', validData)
+
+    expect(mockSeriesUpdate).toHaveBeenCalledWith({
+      where: { id: 'ser-1' },
+      data: expect.objectContaining({
+        name: validData.name,
+        churchId: validData.churchId,
+      }),
+    })
+    expect(mockRedirect).toHaveBeenCalledWith('/series/ser-1')
+  })
+
+  it('persists photoUrl when provided', async () => {
+    const dataWithPhoto = { ...validData, photoUrl: 'https://utfs.io/f/photo.jpg' }
+
+    await updateSeriesAction('ser-1', dataWithPhoto)
+
+    expect(mockSeriesUpdate).toHaveBeenCalledWith({
+      where: { id: 'ser-1' },
+      data: expect.objectContaining({ photoUrl: 'https://utfs.io/f/photo.jpg' }),
+    })
+  })
+
+  it('sets photoUrl to null when not provided', async () => {
+    await updateSeriesAction('ser-1', validData)
+
+    expect(mockSeriesUpdate).toHaveBeenCalledWith({
+      where: { id: 'ser-1' },
+      data: expect.objectContaining({ photoUrl: null }),
+    })
+  })
+
+  it('returns fieldErrors when required fields are missing', async () => {
+    const result = await updateSeriesAction('ser-1', { ...validData, name: '' })
+
+    expect(result?.fieldErrors).toBeDefined()
+    expect(mockSeriesUpdate).not.toHaveBeenCalled()
+  })
+
+  it('redirects to / when user is not an organiser', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1', role: 'ATTENDEE' } })
+    mockRedirect.mockImplementationOnce(() => { throw new Error('NEXT_REDIRECT') })
+
+    await expect(updateSeriesAction('ser-1', validData)).rejects.toThrow('NEXT_REDIRECT')
+
+    expect(mockRedirect).toHaveBeenCalledWith('/')
+    expect(mockSeriesUpdate).not.toHaveBeenCalled()
+  })
+
+  it('redirects to /organiser when series is not found', async () => {
+    mockSeriesFindUnique.mockResolvedValue(null)
+    mockRedirect.mockImplementationOnce(() => { throw new Error('NEXT_REDIRECT') })
+
+    await expect(updateSeriesAction('ser-1', validData)).rejects.toThrow('NEXT_REDIRECT')
+
+    expect(mockRedirect).toHaveBeenCalledWith('/organiser')
+    expect(mockSeriesUpdate).not.toHaveBeenCalled()
+  })
+
+  it('redirects to / when organiser is not assigned to the church', async () => {
+    mockCanManageChurch.mockResolvedValue(false)
+    mockRedirect.mockImplementationOnce(() => { throw new Error('NEXT_REDIRECT') })
+
+    await expect(updateSeriesAction('ser-1', validData)).rejects.toThrow('NEXT_REDIRECT')
+
+    expect(mockRedirect).toHaveBeenCalledWith('/')
+    expect(mockSeriesUpdate).not.toHaveBeenCalled()
+  })
+})
+
+describe('deleteSeriesAction', () => {
+  const existing = { churchId: 'ch-1' }
+
+  beforeEach(() => {
+    mockSeriesFindUnique.mockResolvedValue(existing)
+    mockSeriesDelete.mockResolvedValue({})
+  })
+
+  it('deletes the series and redirects to /organiser', async () => {
+    await deleteSeriesAction('ser-1')
+
+    expect(mockSeriesDelete).toHaveBeenCalledWith({ where: { id: 'ser-1' } })
+    expect(mockRedirect).toHaveBeenCalledWith('/organiser')
+  })
+
+  it('redirects to / when user is not an organiser', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1', role: 'ATTENDEE' } })
+    mockRedirect.mockImplementationOnce(() => { throw new Error('NEXT_REDIRECT') })
+
+    await expect(deleteSeriesAction('ser-1')).rejects.toThrow('NEXT_REDIRECT')
+
+    expect(mockRedirect).toHaveBeenCalledWith('/')
+    expect(mockSeriesDelete).not.toHaveBeenCalled()
+  })
+
+  it('redirects to /organiser when series is not found', async () => {
+    mockSeriesFindUnique.mockResolvedValue(null)
+    mockRedirect.mockImplementationOnce(() => { throw new Error('NEXT_REDIRECT') })
+
+    await expect(deleteSeriesAction('ser-1')).rejects.toThrow('NEXT_REDIRECT')
+
+    expect(mockRedirect).toHaveBeenCalledWith('/organiser')
+    expect(mockSeriesDelete).not.toHaveBeenCalled()
+  })
+
+  it('redirects to / when organiser is not assigned to the church', async () => {
+    mockCanManageChurch.mockResolvedValue(false)
+    mockRedirect.mockImplementationOnce(() => { throw new Error('NEXT_REDIRECT') })
+
+    await expect(deleteSeriesAction('ser-1')).rejects.toThrow('NEXT_REDIRECT')
+
+    expect(mockRedirect).toHaveBeenCalledWith('/')
+    expect(mockSeriesDelete).not.toHaveBeenCalled()
   })
 })
