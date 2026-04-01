@@ -19,8 +19,13 @@ interface Props {
 
 export async function generateMetadata({ params }: Props) {
   const { id } = await params;
-  const event = await getEventById(id);
-  return { title: event ? `${event.title} — One Another` : "Event Not Found" };
+  const [event, session] = await Promise.all([getEventById(id), auth()]);
+  if (!event) return { title: "Event Not Found" };
+  if (event.isDraft) {
+    const canManage = await canManageChurch(session?.user?.id, session?.user?.role, event.churchId);
+    if (!canManage) return { title: "Event Not Found" };
+  }
+  return { title: `${event.title} — One Another` };
 }
 
 export default async function EventDetailPage({ params }: Props) {

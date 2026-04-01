@@ -349,19 +349,18 @@ export async function attendEventAction(eventId: string): Promise<AttendEventSta
   const session = await auth();
   if (!session?.user?.id) return { error: "You must be signed in." };
 
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: { id: true, title: true, datetime: true, isDraft: true },
+  });
+  if (!event || event.isDraft) return { error: "Event not found." };
+
   await prisma.eventAttendee.create({
     data: { eventId, userId: session.user.id },
   });
 
-  // Schedule an EVENT_REMINDER for this user
   try {
-    const event = await prisma.event.findUnique({
-      where: { id: eventId },
-      select: { id: true, title: true, datetime: true },
-    });
-    if (event) {
-      await scheduleEventReminder(session.user.id, event);
-    }
+    await scheduleEventReminder(session.user.id, event);
   } catch (err) {
     console.error("Failed to schedule event reminder:", err);
   }
@@ -410,10 +409,12 @@ export async function registerEventAction(
 
   const event = await prisma.event.findUnique({
     where: { id: eventId },
-    select: { id: true, title: true, datetime: true, capacity: true, _count: { select: { attendees: true } } },
+    select: { id: true, title: true, datetime: true, isDraft: true, capacity: true, _count: { select: { attendees: true } } },
   });
 
-  if (event?.capacity != null && event._count.attendees >= event.capacity) {
+  if (!event || event.isDraft) return { error: "Event not found." };
+
+  if (event.capacity != null && event._count.attendees >= event.capacity) {
     return { error: "Sorry, this event is fully booked." };
   }
 
@@ -426,15 +427,12 @@ export async function registerEventAction(
     },
   });
 
-  // Schedule an EVENT_REMINDER for this user
   try {
-    if (event) {
-      await scheduleEventReminder(session.user.id, {
-        id: event.id,
-        title: event.title,
-        datetime: event.datetime,
-      });
-    }
+    await scheduleEventReminder(session.user.id, {
+      id: event.id,
+      title: event.title,
+      datetime: event.datetime,
+    });
   } catch (err) {
     console.error("Failed to schedule event reminder after registration:", err);
   }

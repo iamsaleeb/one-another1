@@ -1,6 +1,7 @@
 "use client";
 
 import { useForm, useWatch } from "react-hook-form";
+import { useTransition } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -85,6 +86,7 @@ export function EditEventForm({
   });
 
   const { isSubmitting } = form.formState;
+  const [isPublishPending, startPublishTransition] = useTransition();
   const requiresRegistration = useWatch({ control: form.control, name: "requiresRegistration" });
 
   const onSubmit = form.handleSubmit(async (data) => {
@@ -99,14 +101,18 @@ export function EditEventForm({
     }
   });
 
-  const handlePublish = async () => {
-    const result = await publishEventAction(event.id);
-    if (result?.error) form.setError("root", { message: result.error });
+  const handlePublish = () => {
+    startPublishTransition(async () => {
+      const result = await publishEventAction(event.id);
+      if (result?.error) form.setError("root", { message: result.error });
+    });
   };
 
-  const handleUnpublish = async () => {
-    const result = await unpublishEventAction(event.id);
-    if (result?.error) form.setError("root", { message: result.error });
+  const handleUnpublish = () => {
+    startPublishTransition(async () => {
+      const result = await unpublishEventAction(event.id);
+      if (result?.error) form.setError("root", { message: result.error });
+    });
   };
 
   return (
@@ -378,20 +384,20 @@ export function EditEventForm({
 
         {event.isDraft ? (
           <div className="flex flex-col gap-2">
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
+            <Button type="submit" className="w-full" disabled={isSubmitting || isPublishPending}>
               {isSubmitting ? "Saving..." : "Save Draft"}
             </Button>
-            <Button type="button" variant="outline" className="w-full" disabled={isSubmitting} onClick={handlePublish}>
-              Publish Event
+            <Button type="button" variant="outline" className="w-full" disabled={isSubmitting || isPublishPending} onClick={handlePublish}>
+              {isPublishPending ? "Publishing..." : "Publish Event"}
             </Button>
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
+            <Button type="submit" className="w-full" disabled={isSubmitting || isPublishPending}>
               {isSubmitting ? "Saving..." : "Save Changes"}
             </Button>
-            <Button type="button" variant="outline" className="w-full text-muted-foreground" disabled={isSubmitting} onClick={handleUnpublish}>
-              Revert to Draft
+            <Button type="button" variant="outline" className="w-full text-muted-foreground" disabled={isSubmitting || isPublishPending} onClick={handleUnpublish}>
+              {isPublishPending ? "Reverting..." : "Revert to Draft"}
             </Button>
           </div>
         )}
