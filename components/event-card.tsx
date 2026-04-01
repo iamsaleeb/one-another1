@@ -24,18 +24,19 @@ export function EventCard({ event }: EventCardProps) {
   return (
     <Link href={`/events/${event.id}`}>
       <Card className="rounded-2xl border-0 bg-white py-0 shadow-card overflow-hidden">
-        {event.photoUrl && (
-          <div className="relative w-full h-44">
-            <Image
-              src={event.photoUrl}
-              alt=""
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, 50vw"
-            />
-          </div>
-        )}
-        <CardContent className="flex flex-col gap-1 p-4">
+        <div className="flex flex-col">
+          {event.photoUrl && (
+            <div className="relative w-full h-44">
+              <Image
+                src={event.photoUrl}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+            </div>
+          )}
+          <CardContent className="flex flex-col gap-1 p-4">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold text-primary uppercase tracking-wide">
               {formatEventDatetime(event.datetime)}
@@ -64,6 +65,7 @@ export function EventCard({ event }: EventCardProps) {
           <p className="text-sm text-muted-foreground">{event.location}</p>
           <p className="text-sm text-muted-foreground">{event.host}</p>
         </CardContent>
+        </div>
       </Card>
     </Link>
   );
