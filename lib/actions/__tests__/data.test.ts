@@ -34,6 +34,9 @@ import {
   getEventsNotByCreator,
   getSeriesNotByCreator,
   getEventAttendees,
+  getUserAttendedEvents,
+  getUserAttendedPastEvents,
+  getUserFollowedSeries,
 } from '@/lib/actions/data'
 import { prisma } from '@/lib/db'
 
@@ -588,5 +591,63 @@ describe('getEventAttendees', () => {
       include: { user: { select: { id: true, name: true, email: true } } },
       orderBy: { createdAt: 'asc' },
     })
+  })
+})
+
+describe('getUserAttendedEvents', () => {
+  it('returns upcoming events attended by the given user ordered by datetime asc', async () => {
+    mockEventFindMany.mockResolvedValue([sampleEvent])
+    const result = await getUserAttendedEvents('user-1')
+    expect(result).toEqual([sampleEvent])
+    expect(mockEventFindMany).toHaveBeenCalledWith({
+      where: { isPast: false, isDraft: false, attendees: { some: { userId: 'user-1' } } },
+      orderBy: { datetime: 'asc' },
+      include: { series: { select: { name: true } } },
+    })
+  })
+
+  it('returns empty array when the user has no upcoming attended events', async () => {
+    mockEventFindMany.mockResolvedValue([])
+    expect(await getUserAttendedEvents('user-none')).toEqual([])
+  })
+})
+
+describe('getUserAttendedPastEvents', () => {
+  it('returns past events attended by the given user ordered by datetime desc', async () => {
+    const pastEvent = { ...sampleEvent, id: 'evt-past', isPast: true }
+    mockEventFindMany.mockResolvedValue([pastEvent])
+    const result = await getUserAttendedPastEvents('user-1')
+    expect(result).toEqual([pastEvent])
+    expect(mockEventFindMany).toHaveBeenCalledWith({
+      where: { isPast: true, isDraft: false, attendees: { some: { userId: 'user-1' } } },
+      orderBy: { datetime: 'desc' },
+      include: { series: { select: { name: true } } },
+    })
+  })
+
+  it('returns empty array when the user has no past attended events', async () => {
+    mockEventFindMany.mockResolvedValue([])
+    expect(await getUserAttendedPastEvents('user-none')).toEqual([])
+  })
+})
+
+describe('getUserFollowedSeries', () => {
+  it('returns series followed by the given user with upcoming event count', async () => {
+    const seriesWithCount = { ...sampleSeries, _count: { events: 4 } }
+    mockSeriesFindMany.mockResolvedValue([seriesWithCount])
+    const result = await getUserFollowedSeries('user-1')
+    expect(result).toEqual([seriesWithCount])
+    expect(mockSeriesFindMany).toHaveBeenCalledWith({
+      where: { followers: { some: { userId: 'user-1' } } },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        _count: { select: { events: { where: { isPast: false, isDraft: false } } } },
+      },
+    })
+  })
+
+  it('returns empty array when the user follows no series', async () => {
+    mockSeriesFindMany.mockResolvedValue([])
+    expect(await getUserFollowedSeries('user-none')).toEqual([])
   })
 })

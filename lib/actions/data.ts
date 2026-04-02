@@ -282,3 +282,29 @@ export const getSeriesNotByCreator = cache(async function getSeriesNotByCreator(
     },
   });
 });
+
+export const getUserAttendedEvents = cache(async function getUserAttendedEvents(userId: string) {
+  return prisma.event.findMany({
+    where: { isPast: false, isDraft: false, attendees: { some: { userId } } },
+    orderBy: { datetime: "asc" },
+    include: { series: { select: { name: true } } },
+  });
+});
+
+export const getUserAttendedPastEvents = cache(async function getUserAttendedPastEvents(userId: string) {
+  return prisma.event.findMany({
+    where: { isPast: true, isDraft: false, attendees: { some: { userId } } },
+    orderBy: { datetime: "desc" },
+    include: { series: { select: { name: true } } },
+  });
+});
+
+export const getUserFollowedSeries = cache(async function getUserFollowedSeries(userId: string) {
+  return prisma.series.findMany({
+    where: { followers: { some: { userId } } },
+    orderBy: { createdAt: "desc" },
+    include: {
+      _count: { select: { events: { where: { isPast: false, isDraft: false } } } },
+    },
+  });
+});
