@@ -30,7 +30,6 @@ model User {
   phone         String?
   dateOfBirth   DateTime? @db.Timestamptz(6)
   onboardingCompleted Boolean @default(false)
-  pushSetupShown      Boolean @default(false)
   role          UserRole  @default(ATTENDEE)
   accounts      Account[]
   sessions      Session[]
