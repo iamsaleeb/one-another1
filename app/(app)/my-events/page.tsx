@@ -1,49 +1,32 @@
-import { EventCard } from "@/components/event-card";
-import { getEvents, getPastEvents } from "@/lib/actions/data";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 import { PageHeader } from "@/components/ui/page-header";
+import {
+  getUserAttendedEvents,
+  getUserAttendedPastEvents,
+  getUserFollowedSeries,
+} from "@/lib/actions/data";
+import { MyEventsTabs } from "./_components/my-events-tabs";
 
 export default async function MyEventsPage() {
-  const [upcomingEvents, pastEvents] = await Promise.all([
-    getEvents(),
-    getPastEvents(),
+  const session = await auth();
+  if (!session?.user?.id) redirect("/");
+  const userId = session.user.id;
+
+  const [upcomingEvents, pastEvents, followedSeries] = await Promise.all([
+    getUserAttendedEvents(userId),
+    getUserAttendedPastEvents(userId),
+    getUserFollowedSeries(userId),
   ]);
 
   return (
     <div className="flex flex-col min-h-screen">
-      <PageHeader
-        title="My Events"
-        description={`${upcomingEvents.length} upcoming`}
+      <PageHeader title="My Events" description={`${upcomingEvents.length} upcoming`} />
+      <MyEventsTabs
+        upcomingEvents={upcomingEvents}
+        pastEvents={pastEvents}
+        followedSeries={followedSeries}
       />
-
-      <div className="flex flex-col gap-6 px-4 py-2">
-        {/* Upcoming */}
-        <section className="flex flex-col gap-3">
-          <h2 className="text-base font-semibold">Upcoming</h2>
-          {upcomingEvents.length > 0 ? (
-            upcomingEvents.map((event) => (
-              <EventCard key={event.id} event={{ ...event, badge: event.tag, seriesName: event.series?.name }} />
-            ))
-          ) : (
-            <p className="text-sm text-muted-foreground py-4 text-center">
-              No upcoming events
-            </p>
-          )}
-        </section>
-
-        {/* Past */}
-        <section className="flex flex-col gap-3">
-          <h2 className="text-base font-semibold">Past</h2>
-          {pastEvents.length > 0 ? (
-            pastEvents.map((event) => (
-              <EventCard key={event.id} event={{ ...event, badge: event.tag, seriesName: event.series?.name }} />
-            ))
-          ) : (
-            <p className="text-sm text-muted-foreground py-4 text-center">
-              No past events
-            </p>
-          )}
-        </section>
-      </div>
     </div>
   );
 }
