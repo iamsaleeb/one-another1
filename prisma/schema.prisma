@@ -43,6 +43,7 @@ model User {
   pushTokens              PushToken[]
   scheduledNotifications  ScheduledNotification[]
   notificationPreferences NotificationPreference[]
+  eventViews              EventView[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -181,6 +182,7 @@ model Event {
   createdById          String?
   createdBy            User?   @relation("UserEvents", fields: [createdById], references: [id], onDelete: SetNull)
   attendees            EventAttendee[]
+  views                EventView[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -197,6 +199,19 @@ model EventAttendee {
   createdAt DateTime @default(now())
 
   @@unique([eventId, userId])
+}
+
+model EventView {
+  id       String   @id @default(cuid())
+  eventId  String
+  userId   String?
+  source   String?
+  event    Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user     User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  viewedAt DateTime @default(now())
+
+  @@index([eventId])
+  @@index([userId])
 }
 
 model ChurchFollower {

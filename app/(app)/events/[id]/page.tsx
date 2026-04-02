@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { AlertTriangle, Calendar, FileEdit, MapPin, Pencil, Repeat, User } from "lucide-react";
+import { AlertTriangle, BarChart2, Calendar, FileEdit, MapPin, Pencil, Repeat, User } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/auth";
 import { getEventById, getEventAttendees } from "@/lib/actions/data";
+import { recordEventView } from "@/lib/actions/analytics";
 import { canManageChurch } from "@/lib/permissions";
 import { formatEventDatetime } from "@/lib/utils";
 import { InfoField } from "@/components/ui/info-field";
@@ -38,7 +39,11 @@ export default async function EventDetailPage({ params }: Props) {
   const canManage = await canManageChurch(session?.user?.id, session?.user?.role, event.churchId);
 
   if (event.isDraft && !canManage) notFound();
-  const attendees = canManage ? await getEventAttendees(id) : undefined;
+
+  const [attendees] = await Promise.all([
+    canManage ? getEventAttendees(id) : Promise.resolve(undefined),
+    recordEventView(event.id, session?.user?.id ?? null, "direct"),
+  ]);
 
   const isAttending = session?.user?.id
     ? event.attendees.some((a) => a.userId === session.user.id)
@@ -76,6 +81,11 @@ export default async function EventDetailPage({ params }: Props) {
             <h1 className="text-xl font-bold leading-snug">{event.title}</h1>
             {canManage && (
               <div className="flex items-center gap-2 shrink-0">
+                <Button asChild variant="outline" size="icon" className="size-9">
+                  <Link href={`/events/${id}/analytics`}>
+                    <BarChart2 className="size-4" />
+                  </Link>
+                </Button>
                 <Button asChild variant="outline" size="icon" className="size-9">
                   <Link href={`/events/${id}/edit`}>
                     <Pencil className="size-4" />
