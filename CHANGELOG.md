@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.6.0](https://github.com/iamsaleeb/one-another/compare/one-another-v0.5.0...one-another-v0.6.0) (2026-04-02)
+
+
+### Features
+
+* added my event screen ([#42](https://github.com/iamsaleeb/one-another/issues/42)) ([baf2baa](https://github.com/iamsaleeb/one-another/commit/baf2baae01b7dc1c9b080330f8b4a43cb4596875))
+* photos implemented ([#39](https://github.com/iamsaleeb/one-another/issues/39)) ([e2afa46](https://github.com/iamsaleeb/one-another/commit/e2afa460ef8d99610307d7e95945b246ab3ae65e))
+
+
+### Bug Fixes
+
+* Fixed up incorrect badge and data retention ([#41](https://github.com/iamsaleeb/one-another/issues/41)) ([282ab08](https://github.com/iamsaleeb/one-another/commit/282ab0875d644d8b329d4d33246cecb025f5ca29))
+
 ## [0.5.0](https://github.com/iamsaleeb/one-another/compare/one-another-v0.4.1...one-another-v0.5.0) (2026-04-01)
 
 
