@@ -66,6 +66,7 @@ export function CreateEventForm({
       price: undefined,
       isDraft: false,
       photoUrl: undefined,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     },
   });
 

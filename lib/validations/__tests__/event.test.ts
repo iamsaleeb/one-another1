@@ -4,6 +4,7 @@ const validInput = {
   title: 'Sunday Worship',
   date: '2026-04-06',
   time: '09:00',
+  timezone: 'Australia/Sydney',
   location: 'Main Hall',
   host: 'Pastor John',
   tag: 'Worship',

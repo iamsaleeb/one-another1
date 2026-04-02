@@ -5,6 +5,7 @@ import { MapPin, SearchX } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EventCard } from "@/components/event-card";
 import { searchEventsAndChurches } from "@/lib/actions/data";
+import { getUserTimezone } from "@/lib/timezone";
 import { PageHeader } from "@/components/ui/page-header";
 import { WHEN_LABELS, TYPE_LABELS, type WhenFilter, type TypeFilter } from "@/types/search";
 import { EventList } from "./_components/event-list";
@@ -19,12 +20,14 @@ export default async function Home({
   const query = q?.trim() ?? "";
   const hasFilters = !!(query || type || when || category);
 
+  const timezone = await getUserTimezone();
   const searchResults = hasFilters
     ? await searchEventsAndChurches({
         query,
         type: (type as TypeFilter) ?? "all",
         when: when as WhenFilter | undefined,
         category: category ?? "",
+        timezone,
       })
     : null;
 

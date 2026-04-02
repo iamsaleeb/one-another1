@@ -1,7 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { UserRole } from "@prisma/client";
+import { format } from "date-fns";
+import { tz } from "@date-fns/tz";
 import { getEventById, getChurchesByManager } from "@/lib/actions/data";
+import { getUserTimezone } from "@/lib/timezone";
 import { PageHeader } from "@/components/ui/page-header";
 import { EditEventForm } from "./_components/edit-event-form";
 
@@ -16,11 +19,15 @@ export default async function EditEventPage({ params }: Props) {
   if (session?.user?.role !== UserRole.ORGANISER && session?.user?.role !== UserRole.ADMIN) redirect("/");
   if (!event) notFound();
 
-  const churches = await getChurchesByManager(session.user.id);
+  const [churches, timezone] = await Promise.all([
+    getChurchesByManager(session.user.id),
+    getUserTimezone(),
+  ]);
   if (!churches.some((c) => c.id === event.churchId)) notFound();
 
-  const [date, fullTime] = event.datetime.toISOString().split("T");
-  const time = fullTime.slice(0, 5);
+  const tzOpt = { in: tz(timezone) };
+  const date = format(event.datetime, "yyyy-MM-dd", tzOpt);
+  const time = format(event.datetime, "HH:mm", tzOpt);
 
   return (
     <div className="mx-auto max-w-lg">

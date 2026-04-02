@@ -17,6 +17,7 @@ export const createEventSchema = z.object({
   price: z.string().optional(),
   isDraft: z.boolean().optional(),
   photoUrl: z.string().url().optional(),
+  timezone: z.string().min(1, "Timezone is required"),
 });
 
 export type CreateEventInput = z.infer<typeof createEventSchema>;

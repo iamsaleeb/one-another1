@@ -103,6 +103,7 @@ const validData = {
   title: 'Sunday Worship',
   date: '2026-04-06',
   time: '09:00',
+  timezone: 'UTC',
   location: 'Main Hall',
   host: 'Pastor John',
   tag: 'Worship',
@@ -128,7 +129,7 @@ describe('createEventAction', () => {
       expect.objectContaining({
         data: expect.objectContaining({
           title: 'Sunday Worship',
-          datetime: new Date('2026-04-06T09:00'),
+          datetime: new Date('2026-04-06T09:00:00Z'),
           location: 'Main Hall',
           host: 'Pastor John',
           tag: 'Worship',
@@ -691,7 +692,7 @@ describe('updateEventAction', () => {
 
     await updateEventAction('evt-1', { ...validData, date: newDate })
 
-    expect(mockReschedule).toHaveBeenCalledWith('evt-1', new Date(`${newDate}T${validData.time}`))
+    expect(mockReschedule).toHaveBeenCalledWith('evt-1', new Date(`${newDate}T${validData.time}:00Z`))
     expect(mockSendPush).toHaveBeenCalledWith(
       ['user-2'],
       'EVENT_POSTPONED',
@@ -703,10 +704,10 @@ describe('updateEventAction', () => {
 
   it('does not reschedule when the datetime is unchanged', async () => {
     const mockReschedule = jest.requireMock('@/lib/schedule-notification').rescheduleEventReminders as jest.Mock
-    // existingPublished.datetime is new Date('2026-05-01T09:00:00Z') — match exactly using local-time constructor
+    // existingPublished.datetime is new Date('2026-05-01T09:00:00Z') — match exactly using TZDate.tz('UTC', ...)
     const sameDate = '2026-05-01'
     const sameTime = '09:00'
-    const existingWithLocalDatetime = { ...existingPublished, datetime: new Date(`${sameDate}T${sameTime}`) }
+    const existingWithLocalDatetime = { ...existingPublished, datetime: new Date(`${sameDate}T${sameTime}:00Z`) }
     mockEventFindUnique.mockResolvedValue(existingWithLocalDatetime)
     mockEventUpdate.mockResolvedValue({})
 

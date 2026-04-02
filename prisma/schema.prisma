@@ -24,12 +24,13 @@ model User {
   id            String    @id @default(cuid())
   name          String?
   email         String    @unique
-  emailVerified DateTime?
+  emailVerified DateTime? @db.Timestamptz(6)
   password      String?
   image         String?
   phone         String?
-  dateOfBirth   DateTime?
+  dateOfBirth   DateTime? @db.Timestamptz(6)
   onboardingCompleted Boolean @default(false)
+  pushSetupShown      Boolean @default(false)
   role          UserRole  @default(ATTENDEE)
   accounts      Account[]
   sessions      Session[]
@@ -44,8 +45,8 @@ model User {
   scheduledNotifications  ScheduledNotification[]
   notificationPreferences NotificationPreference[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt      @db.Timestamptz(6)
 }
 
 model Account {
@@ -61,8 +62,8 @@ model Account {
   id_token          String?
   session_state     String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt      @db.Timestamptz(6)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -72,17 +73,17 @@ model Account {
 model Session {
   sessionToken String   @unique
   userId       String
-  expires      DateTime
+  expires      DateTime @db.Timestamptz(6)
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt      @db.Timestamptz(6)
 }
 
 model VerificationToken {
   identifier String
   token      String
-  expires    DateTime
+  expires    DateTime @db.Timestamptz(6)
 
   @@id([identifier, token])
 }
@@ -104,8 +105,8 @@ model Church {
   organisers   ChurchOrganiser[] @relation("ChurchOrganisers")
   admins       ChurchAdmin[]     @relation("ChurchAdmins")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt      @db.Timestamptz(6)
 }
 
 model ChurchAdmin {
@@ -113,7 +114,7 @@ model ChurchAdmin {
   churchId  String
   user      User     @relation("UserAdminChurches", fields: [userId], references: [id], onDelete: Cascade)
   church    Church   @relation("ChurchAdmins", fields: [churchId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
 
   @@id([userId, churchId])
 }
@@ -123,7 +124,7 @@ model ChurchOrganiser {
   churchId  String
   user      User     @relation("UserChurches", fields: [userId], references: [id], onDelete: Cascade)
   church    Church   @relation("ChurchOrganisers", fields: [churchId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
 
   @@id([userId, churchId])
 }
@@ -152,13 +153,13 @@ model Series {
   followers   SeriesFollower[]
   createdById String?
   createdBy   User?    @relation("UserSeries", fields: [createdById], references: [id], onDelete: SetNull)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt      @db.Timestamptz(6)
 }
 
 model Event {
   id                   String  @id @default(cuid())
-  datetime             DateTime
+  datetime             DateTime  @db.Timestamptz(6)
   title                String
   location             String
   host                 String
@@ -172,7 +173,7 @@ model Event {
   collectPhone         Boolean @default(false)
   collectNotes         Boolean @default(false)
   price                String?
-  cancelledAt          DateTime?
+  cancelledAt          DateTime? @db.Timestamptz(6)
   cancellationReason   String?
   churchId             String?
   church               Church? @relation(fields: [churchId], references: [id], onDelete: SetNull)
@@ -182,8 +183,8 @@ model Event {
   createdBy            User?   @relation("UserEvents", fields: [createdById], references: [id], onDelete: SetNull)
   attendees            EventAttendee[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt      @db.Timestamptz(6)
 }
 
 model EventAttendee {
@@ -194,7 +195,7 @@ model EventAttendee {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   phone     String?
   notes     String?
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
 
   @@unique([eventId, userId])
 }
@@ -205,7 +206,7 @@ model ChurchFollower {
   userId    String
   church    Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
 
   @@unique([churchId, userId])
 }
@@ -216,7 +217,7 @@ model SeriesFollower {
   userId    String
   series    Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
 
   @@unique([seriesId, userId])
 }
@@ -226,7 +227,7 @@ model PushToken {
   userId    String
   token     String   @unique
   platform  String
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, platform])
@@ -237,12 +238,12 @@ model ScheduledNotification {
   userId       String
   type         String
   eventId      String?
-  scheduledFor DateTime
-  sentAt       DateTime?
-  cancelledAt  DateTime?
+  scheduledFor DateTime  @db.Timestamptz(6)
+  sentAt       DateTime? @db.Timestamptz(6)
+  cancelledAt  DateTime? @db.Timestamptz(6)
   payload      Json
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt    DateTime  @default(now())
+  createdAt    DateTime  @default(now()) @db.Timestamptz(6)
 
   @@unique([userId, type, eventId])
   @@index([scheduledFor, sentAt, cancelledAt])

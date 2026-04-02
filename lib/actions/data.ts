@@ -2,33 +2,37 @@ import { cache } from "react";
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
 import { startOfDay, endOfDay, addDays, getDay } from "date-fns";
+import { tz } from "@date-fns/tz";
 import type { WhenFilter, TypeFilter } from "@/types/search";
+import { DEFAULT_TIMEZONE } from "@/lib/timezone";
 
 export interface SearchFilters {
   query: string;
   type?: TypeFilter;
   category?: string;
   when?: WhenFilter;
+  timezone?: string;
 }
 
-function getDateRange(when: WhenFilter): { gte: Date; lte: Date } {
+function getDateRange(when: WhenFilter, timezone: string): { gte: Date; lte: Date } {
   const now = new Date();
+  const tzOpt = { in: tz(timezone) };
   if (when === "today") {
-    return { gte: startOfDay(now), lte: endOfDay(now) };
+    return { gte: startOfDay(now, tzOpt), lte: endOfDay(now, tzOpt) };
   }
   if (when === "tomorrow") {
     const tomorrow = addDays(now, 1);
-    return { gte: startOfDay(tomorrow), lte: endOfDay(tomorrow) };
+    return { gte: startOfDay(tomorrow, tzOpt), lte: endOfDay(tomorrow, tzOpt) };
   }
   // weekend: next Saturday + Sunday
-  const day = getDay(now); // 0=Sun, 6=Sat
+  const day = getDay(now, tzOpt); // 0=Sun, 6=Sat in user's timezone
   let daysUntilSat: number;
   if (day === 6) daysUntilSat = 0;
   else if (day === 0) daysUntilSat = 6;
   else daysUntilSat = 6 - day;
   const saturday = addDays(now, daysUntilSat);
   const sunday = addDays(saturday, 1);
-  return { gte: startOfDay(saturday), lte: endOfDay(sunday) };
+  return { gte: startOfDay(saturday, tzOpt), lte: endOfDay(sunday, tzOpt) };
 }
 
 export const getEvents = cache(async function getEvents() {
@@ -136,7 +140,7 @@ export const getChurchById = cache(async function getChurchById(id: string) {
 });
 
 export const searchEventsAndChurches = cache(async function searchEventsAndChurches(filters: SearchFilters) {
-  const { query, type = "all", category, when } = filters;
+  const { query, type = "all", category, when, timezone = DEFAULT_TIMEZONE } = filters;
   const hasFilters = !!(query || category || when);
 
   if (!hasFilters) return { events: [], churches: [] };
@@ -158,7 +162,7 @@ export const searchEventsAndChurches = cache(async function searchEventsAndChurc
     eventWhere.tag = { equals: category, mode: "insensitive" };
   }
   if (when) {
-    const { gte, lte } = getDateRange(when);
+    const { gte, lte } = getDateRange(when, timezone);
     eventWhere.datetime = { gte, lte };
   }
 

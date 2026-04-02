@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { auth } from "@/auth";
 import { getEventById, getEventAttendees } from "@/lib/actions/data";
 import { canManageChurch } from "@/lib/permissions";
-import { formatEventDatetime } from "@/lib/utils";
+import { LocalTime } from "@/components/local-time";
 import { InfoField } from "@/components/ui/info-field";
 import { HeroBanner } from "@/components/ui/hero-banner";
 import { DeleteEventButton } from "./_components/delete-event-button";
@@ -92,7 +92,9 @@ export default async function EventDetailPage({ params }: Props) {
 
           <div className="flex flex-col gap-4">
             <InfoField icon={User} label="Host">{event.host}</InfoField>
-            <InfoField icon={Calendar} label="Date & Time">{formatEventDatetime(event.datetime)}</InfoField>
+            <InfoField icon={Calendar} label="Date & Time">
+              <LocalTime isoString={event.datetime.toISOString()} formatStr="EEE, d MMM | h:mm a" uppercase />
+            </InfoField>
             <InfoField icon={MapPin} label="Location">{event.location}</InfoField>
             {event.series && (
               <InfoField icon={Repeat} label="Part of Series">

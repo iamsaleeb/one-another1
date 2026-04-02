@@ -1,7 +1,7 @@
 "use client";
 
-import { useForm, useWatch } from "react-hook-form";
 import { useTransition } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -86,6 +86,7 @@ export function EditEventForm({
       collectNotes: event.collectNotes,
       price: event.price ?? undefined,
       photoUrl: event.photoUrl ?? undefined,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     },
   });
 

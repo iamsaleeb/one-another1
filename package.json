@@ -21,6 +21,7 @@
     "@capacitor/core": "^8.2.0",
     "@capacitor/ios": "^8.2.0",
     "@capacitor/push-notifications": "^8.0.3",
+    "@date-fns/tz": "^1.4.1",
     "@hookform/resolvers": "^5.2.2",
     "@prisma/client": "^6.19.2",
     "@uploadthing/react": "^7.3.3",

@@ -11,6 +11,7 @@ import { InfoField } from "@/components/ui/info-field";
 import { RoleBadge } from "./_components/role-badge";
 import { version } from "@/package.json";
 import { format } from "date-fns";
+import { tz } from "@date-fns/tz";
 
 export const metadata: Metadata = {
   title: "Profile — One Another",
@@ -69,7 +70,7 @@ export default async function ProfilePage() {
           {dbUser?.dateOfBirth && (
             <div className="px-4 py-3">
               <InfoField icon={CalendarDays} label="Date of birth" iconClassName="w-3.5 h-3.5 text-primary">
-                {format(dbUser.dateOfBirth, "d MMMM yyyy")}
+                {format(dbUser.dateOfBirth, "d MMMM yyyy", { in: tz("UTC") })}
               </InfoField>
             </div>
           )}

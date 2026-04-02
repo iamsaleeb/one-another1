@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
 import { UserRole } from "@prisma/client";
+import { TZDate } from "@date-fns/tz";
 import { createEventSchema, registerEventSchema, type CreateEventInput } from "@/lib/validations/event";
 import { canManageChurch } from "@/lib/permissions";
 import type { ActionResult } from "@/lib/actions/auth";
@@ -27,10 +28,12 @@ export async function createEventAction(data: CreateEventInput): Promise<ActionR
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  const { title, date, time, location, host, tag, description, seriesId, requiresRegistration, capacity, collectPhone, collectNotes, price, isDraft, photoUrl } = parsed.data;
+  const { title, date, time, timezone, location, host, tag, description, seriesId, requiresRegistration, capacity, collectPhone, collectNotes, price, isDraft, photoUrl } = parsed.data;
   let { churchId } = parsed.data;
 
-  const datetime = new Date(`${date}T${time}`);
+  const [y, mo, d] = date.split("-").map(Number);
+  const [h, mi] = time.split(":").map(Number);
+  const datetime = TZDate.tz(timezone, y, mo - 1, d, h, mi, 0);
 
   if (seriesId) {
     const series = await prisma.series.findUnique({ where: { id: seriesId }, select: { churchId: true } });
@@ -101,9 +104,12 @@ export async function updateEventAction(id: string, data: CreateEventInput): Pro
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  const { title, date, time, location, host, tag, description, seriesId, requiresRegistration, capacity, collectPhone, collectNotes, price, photoUrl } = parsed.data;
+  const { title, date, time, timezone, location, host, tag, description, seriesId, requiresRegistration, capacity, collectPhone, collectNotes, price, photoUrl } = parsed.data;
   let { churchId } = parsed.data;
-  const newDatetime = new Date(`${date}T${time}`);
+
+  const [y, mo, d] = date.split("-").map(Number);
+  const [h, mi] = time.split(":").map(Number);
+  const newDatetime = TZDate.tz(timezone, y, mo - 1, d, h, mi, 0);
 
   if (seriesId) {
     const series = await prisma.series.findUnique({ where: { id: seriesId }, select: { churchId: true } });
