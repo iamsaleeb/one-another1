@@ -2,7 +2,15 @@ import { z } from "zod";
 
 export const onboardingSchema = z.object({
   phone: z.string().optional(),
-  dateOfBirth: z.string().optional(),
+  dateOfBirth: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format")
+    .refine((val) => !isNaN(new Date(val).getTime()), "Invalid date")
+    .refine(
+      (val) => new Date(val) <= new Date(),
+      "Date of birth cannot be in the future"
+    )
+    .optional(),
   image: z.string().url().optional(),
 });
 

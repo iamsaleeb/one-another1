@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import { CalendarIcon, Camera } from "lucide-react";
 
 import { cn, getInitials } from "@/lib/utils";
@@ -178,7 +178,7 @@ export function OnboardingForm({ userName, userEmail }: OnboardingFormProps) {
                         >
                           <CalendarIcon className="mr-2 size-4 opacity-70" />
                           {field.value
-                            ? format(new Date(field.value), "d MMMM yyyy")
+                            ? format(parse(field.value, "yyyy-MM-dd", new Date()), "d MMMM yyyy")
                             : "Select date"}
                         </Button>
                       </FormControl>
@@ -187,9 +187,9 @@ export function OnboardingForm({ userName, userEmail }: OnboardingFormProps) {
                       <Calendar
                         mode="single"
                         captionLayout="dropdown-years"
-                        selected={field.value ? new Date(field.value) : undefined}
+                        selected={field.value ? parse(field.value, "yyyy-MM-dd", new Date()) : undefined}
                         onSelect={(date) => {
-                          field.onChange(date ? date.toISOString() : undefined);
+                          field.onChange(date ? format(date, "yyyy-MM-dd") : undefined);
                           setCalendarOpen(false);
                         }}
                         disabled={(date) => date > new Date()}
@@ -197,7 +197,7 @@ export function OnboardingForm({ userName, userEmail }: OnboardingFormProps) {
                         toYear={new Date().getFullYear()}
                         defaultMonth={
                           field.value
-                            ? new Date(field.value)
+                            ? parse(field.value, "yyyy-MM-dd", new Date())
                             : new Date(new Date().getFullYear() - 25, 0)
                         }
                       />

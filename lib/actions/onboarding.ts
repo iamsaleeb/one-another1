@@ -28,7 +28,7 @@ export async function completeOnboardingAction(
     where: { id: session.user.id },
     data: {
       phone: phone || null,
-      dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+      dateOfBirth: dateOfBirth ? new Date(`${dateOfBirth}T12:00:00.000Z`) : null,
       image: image || null,
       onboardingCompleted: true,
     },
