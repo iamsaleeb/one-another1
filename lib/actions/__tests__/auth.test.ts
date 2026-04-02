@@ -139,7 +139,7 @@ describe('registerAction', () => {
     expect(mockSignIn).toHaveBeenCalledWith('credentials', {
       email: 'jane@example.com',
       password: 'securepass',
-      redirectTo: '/',
+      redirectTo: '/onboarding',
     })
     expect(result).toEqual({})
   })

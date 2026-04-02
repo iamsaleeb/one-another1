@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/auth";
+import { prisma } from "@/lib/db";
 import { signOutAction } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
-import { Bell, ChevronRight, Info, LogOut, Mail, Tag, User } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Bell, CalendarDays, ChevronRight, Info, LogOut, Mail, Phone, Tag, User } from "lucide-react";
 import { getInitials } from "@/lib/utils";
 import { InfoField } from "@/components/ui/info-field";
 import { RoleBadge } from "./_components/role-badge";
 import { version } from "@/package.json";
+import { format } from "date-fns";
 
 export const metadata: Metadata = {
   title: "Profile — One Another",
@@ -17,14 +20,24 @@ export default async function ProfilePage() {
   const session = await auth();
   const user = session?.user;
 
+  const dbUser = user?.id
+    ? await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { phone: true, dateOfBirth: true },
+      })
+    : null;
+
   return (
     <div className="bg-background min-h-screen">
       <div className="flex flex-col gap-4 px-4 pt-6 pb-28">
         {/* Profile header card */}
         <div className="rounded-2xl bg-white shadow-card p-5 flex items-center gap-4">
-          <div className="flex items-center justify-center w-16 h-16 rounded-xl bg-primary text-primary-foreground text-xl font-bold shrink-0">
-            {getInitials(user?.name, user?.email)}
-          </div>
+          <Avatar className="size-16 text-xl rounded-xl shrink-0">
+            <AvatarImage src={user?.image ?? ""} className="object-cover" />
+            <AvatarFallback className="rounded-xl bg-primary text-primary-foreground font-bold">
+              {getInitials(user?.name, user?.email)}
+            </AvatarFallback>
+          </Avatar>
           <div className="min-w-0">
             <h1 className="text-lg font-bold truncate">{user?.name ?? "User"}</h1>
             <p className="text-sm text-muted-foreground truncate">{user?.email}</p>
@@ -46,6 +59,20 @@ export default async function ProfilePage() {
               {user?.email ?? "—"}
             </InfoField>
           </div>
+          {dbUser?.phone && (
+            <div className="px-4 py-3">
+              <InfoField icon={Phone} label="Phone" iconClassName="w-3.5 h-3.5 text-primary">
+                {dbUser.phone}
+              </InfoField>
+            </div>
+          )}
+          {dbUser?.dateOfBirth && (
+            <div className="px-4 py-3">
+              <InfoField icon={CalendarDays} label="Date of birth" iconClassName="w-3.5 h-3.5 text-primary">
+                {format(dbUser.dateOfBirth, "d MMMM yyyy")}
+              </InfoField>
+            </div>
+          )}
         </div>
 
         {/* Notification settings */}

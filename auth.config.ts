@@ -12,9 +12,20 @@ export const authConfig = {
         nextUrl.pathname.startsWith("/register") ||
         nextUrl.pathname.startsWith("/terms") ||
         nextUrl.pathname.startsWith("/privacy");
+      const isOnboardingPage = nextUrl.pathname.startsWith("/onboarding");
 
       if (isAuthPage) {
         if (isLoggedIn) {
+          return Response.redirect(new URL("/", nextUrl));
+        }
+        return true;
+      }
+
+      if (isOnboardingPage) {
+        if (!isLoggedIn) {
+          return Response.redirect(new URL("/login", nextUrl));
+        }
+        if (auth?.user?.onboardingCompleted === true) {
           return Response.redirect(new URL("/", nextUrl));
         }
         return true;
@@ -24,6 +35,10 @@ export const authConfig = {
         const loginUrl = new URL("/login", nextUrl);
         loginUrl.searchParams.set("callbackUrl", nextUrl.pathname);
         return Response.redirect(loginUrl);
+      }
+
+      if (auth?.user?.onboardingCompleted === false) {
+        return Response.redirect(new URL("/onboarding", nextUrl));
       }
 
       return true;

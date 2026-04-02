@@ -1,0 +1,242 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import { CalendarIcon, Camera } from "lucide-react";
+
+import { cn, getInitials } from "@/lib/utils";
+import { onboardingSchema, type OnboardingInput } from "@/lib/validations/onboarding";
+import { completeOnboardingAction, skipOnboardingAction } from "@/lib/actions/onboarding";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { UploadButton } from "@/lib/uploadthing";
+
+interface OnboardingFormProps {
+  userName?: string;
+  userEmail?: string;
+}
+
+export function OnboardingForm({ userName, userEmail }: OnboardingFormProps) {
+  const router = useRouter();
+  const { update } = useSession();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSkipping, setIsSkipping] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | undefined>();
+
+  const form = useForm<OnboardingInput>({
+    resolver: zodResolver(onboardingSchema),
+    defaultValues: {
+      phone: "",
+      dateOfBirth: undefined,
+      image: undefined,
+    },
+  });
+
+  async function handleSubmit(data: OnboardingInput) {
+    setIsSubmitting(true);
+    const result = await completeOnboardingAction(data);
+    if (result.error) {
+      form.setError("root", { message: result.error });
+      setIsSubmitting(false);
+      return;
+    }
+    await update({ onboardingCompleted: true });
+    router.push("/");
+  }
+
+  async function handleSkip() {
+    setIsSkipping(true);
+    await skipOnboardingAction();
+    await update({ onboardingCompleted: true });
+    router.push("/");
+  }
+
+  return (
+    <div className="flex flex-col gap-6 px-4 pt-10 pb-10 max-w-md mx-auto w-full">
+      {/* Header */}
+      <div className="flex flex-col gap-1 text-center">
+        <span className="text-2xl font-bold text-primary">1Another</span>
+        <h1 className="text-xl font-bold mt-2">Complete your profile</h1>
+        <p className="text-sm text-muted-foreground">
+          Help us personalise your experience. All fields are optional.
+        </p>
+      </div>
+
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(handleSubmit)}
+          className="flex flex-col gap-5"
+        >
+          {/* Profile Photo */}
+          <div className="rounded-2xl bg-white shadow-card p-5 flex flex-col items-center gap-4">
+            <p className="text-sm font-medium self-start">Profile photo</p>
+            <div className="flex flex-col items-center gap-3">
+              <Avatar className="size-24 text-2xl">
+                <AvatarImage src={photoUrl ?? ""} />
+                <AvatarFallback className="bg-primary text-primary-foreground">
+                  {getInitials(userName, userEmail)}
+                </AvatarFallback>
+              </Avatar>
+              <UploadButton
+                endpoint="profilePhoto"
+                onClientUploadComplete={(res) => {
+                  const url = res?.[0]?.ufsUrl;
+                  if (!url) {
+                    setUploadError("Upload finished but no URL was returned. Please try again.");
+                    return;
+                  }
+                  setUploadError(null);
+                  setPhotoUrl(url);
+                  form.setValue("image", url);
+                }}
+                onUploadError={(error) => {
+                  setUploadError(error.message);
+                }}
+                appearance={{
+                  button:
+                    "bg-primary text-primary-foreground text-xs rounded-lg px-3 py-1.5 ut-ready:bg-primary ut-uploading:cursor-not-allowed ut-uploading:bg-primary/70",
+                  allowedContent: "hidden",
+                  container: "w-auto",
+                }}
+                content={{
+                  button: (
+                    <span className="flex items-center gap-1.5">
+                      <Camera className="size-3.5" />
+                      {photoUrl ? "Change photo" : "Add photo"}
+                    </span>
+                  ),
+                }}
+              />
+              {uploadError && (
+                <p className="text-xs text-destructive text-center">{uploadError}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Personal Details */}
+          <div className="rounded-2xl bg-white shadow-card p-5 flex flex-col gap-4">
+            <p className="text-sm font-medium">Personal details</p>
+
+            {/* Phone */}
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone number</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="tel"
+                      placeholder="+44 7700 900000"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Date of Birth */}
+            <FormField
+              control={form.control}
+              name="dateOfBirth"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date of birth</FormLabel>
+                  <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 size-4 opacity-70" />
+                          {field.value
+                            ? format(new Date(field.value), "d MMMM yyyy")
+                            : "Select date"}
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        captionLayout="dropdown-years"
+                        selected={field.value ? new Date(field.value) : undefined}
+                        onSelect={(date) => {
+                          field.onChange(date ? date.toISOString() : undefined);
+                          setCalendarOpen(false);
+                        }}
+                        disabled={(date) => date > new Date()}
+                        fromYear={1920}
+                        toYear={new Date().getFullYear()}
+                        defaultMonth={
+                          field.value
+                            ? new Date(field.value)
+                            : new Date(new Date().getFullYear() - 25, 0)
+                        }
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Root error */}
+          {form.formState.errors.root && (
+            <p className="text-sm text-destructive text-center">
+              {form.formState.errors.root.message}
+            </p>
+          )}
+
+          {/* Actions */}
+          <div className="flex flex-col gap-3">
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isSubmitting || isSkipping}
+            >
+              {isSubmitting ? "Saving..." : "Save & continue"}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full text-muted-foreground"
+              disabled={isSubmitting || isSkipping}
+              onClick={handleSkip}
+            >
+              {isSkipping ? "Skipping..." : "Skip for now"}
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </div>
+  );
+}
