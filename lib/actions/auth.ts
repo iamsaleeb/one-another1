@@ -62,7 +62,7 @@ export async function registerAction(data: RegisterInput): Promise<ActionResult>
     await signIn("credentials", {
       email,
       password,
-      redirectTo: "/",
+      redirectTo: "/onboarding",
     });
   } catch (error) {
     if (error instanceof AuthError) {

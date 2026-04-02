@@ -6,6 +6,17 @@ import { UserRole } from "@prisma/client";
 const f = createUploadthing();
 
 export const ourFileRouter = {
+  profilePhoto: f({ image: { maxFileSize: "4MB", maxFileCount: 1 } })
+    .middleware(async () => {
+      const session = await auth();
+      if (!session?.user?.id) {
+        throw new UploadThingError("Unauthorized");
+      }
+      return { userId: session.user.id };
+    })
+    .onUploadComplete(async ({ file }) => {
+      return { url: file.ufsUrl };
+    }),
   coverPhoto: f({ image: { maxFileSize: "4MB", maxFileCount: 1 } })
     .middleware(async () => {
       const session = await auth();

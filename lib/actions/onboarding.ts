@@ -1,0 +1,52 @@
+"use server";
+
+import { z } from "zod";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/db";
+import {
+  onboardingSchema,
+  type OnboardingInput,
+} from "@/lib/validations/onboarding";
+import type { ActionResult } from "@/lib/actions/auth";
+
+export async function completeOnboardingAction(
+  data: OnboardingInput
+): Promise<ActionResult> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "You must be logged in." };
+  }
+
+  const parsed = onboardingSchema.safeParse(data);
+  if (!parsed.success) {
+    return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  }
+
+  const { phone, dateOfBirth, image } = parsed.data;
+
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: {
+      phone: phone || null,
+      dateOfBirth: dateOfBirth ? new Date(`${dateOfBirth}T12:00:00.000Z`) : null,
+      image: image || null,
+      onboardingCompleted: true,
+    },
+  });
+
+  return {};
+}
+
+export async function skipOnboardingAction(): Promise<ActionResult> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "You must be logged in." };
+  }
+
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: { onboardingCompleted: true },
+  });
+
+  return {};
+}
