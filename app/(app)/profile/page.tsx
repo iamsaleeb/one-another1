@@ -29,7 +29,7 @@ export default async function ProfilePage() {
     : null;
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-background">
       <div className="flex flex-col gap-4 px-4 pt-6 pb-28">
         {/* Profile header card */}
         <div className="rounded-2xl bg-white shadow-card p-5 flex items-center gap-4">
