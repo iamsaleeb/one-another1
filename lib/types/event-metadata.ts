@@ -56,7 +56,9 @@ export function parseEventMetadata(raw: unknown): EventMetadata {
               return (
                 typeof i.id === "string" &&
                 typeof i.date === "string" &&
-                typeof i.title === "string"
+                typeof i.title === "string" &&
+                (i.time === undefined || typeof i.time === "string") &&
+                (i.description === undefined || typeof i.description === "string")
               );
             }
           )

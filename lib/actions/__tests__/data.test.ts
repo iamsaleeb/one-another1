@@ -549,20 +549,16 @@ describe('getEventAttendees', () => {
   const sampleAttendees = [
     {
       id: 'ea-1',
-      eventId: 'evt-1',
-      userId: 'user-1',
       phone: '+61400000000',
       notes: 'Vegetarian',
-      createdAt: new Date(),
+      metadata: null,
       user: { id: 'user-1', name: 'Alice', email: 'alice@example.com' },
     },
     {
       id: 'ea-2',
-      eventId: 'evt-1',
-      userId: 'user-2',
       phone: null,
       notes: null,
-      createdAt: new Date(),
+      metadata: null,
       user: { id: 'user-2', name: 'Bob', email: 'bob@example.com' },
     },
   ]
