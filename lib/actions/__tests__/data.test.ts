@@ -575,7 +575,13 @@ describe('getEventAttendees', () => {
     expect(result).toEqual(sampleAttendees)
     expect(mockEventAttendeeFindMany).toHaveBeenCalledWith({
       where: { eventId: 'evt-1' },
-      include: { user: { select: { id: true, name: true, email: true } } },
+      select: {
+        id: true,
+        phone: true,
+        notes: true,
+        metadata: true,
+        user: { select: { id: true, name: true, email: true } },
+      },
       orderBy: { createdAt: 'asc' },
     })
   })
@@ -588,7 +594,13 @@ describe('getEventAttendees', () => {
     expect(result).toEqual([])
     expect(mockEventAttendeeFindMany).toHaveBeenCalledWith({
       where: { eventId: 'evt-empty' },
-      include: { user: { select: { id: true, name: true, email: true } } },
+      select: {
+        id: true,
+        phone: true,
+        notes: true,
+        metadata: true,
+        user: { select: { id: true, name: true, email: true } },
+      },
       orderBy: { createdAt: 'asc' },
     })
   })

@@ -14,6 +14,7 @@ import { DeleteEventButton } from "./_components/delete-event-button";
 import { CancelEventButton } from "./_components/cancel-event-button";
 import { UncancelEventButton } from "./_components/uncancel-event-button";
 import { EventActionBar } from "./_components/event-action-bar";
+import { CampAgenda } from "./_components/camp-agenda";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -45,7 +46,7 @@ export default async function EventDetailPage({ params }: Props) {
     ? event.attendees.some((a) => a.userId === session.user.id)
     : false;
 
-  const { registration } = parseEventMetadata(event.metadata);
+  const { registration, camp } = parseEventMetadata(event.metadata);
 
   return (
     <div className="bg-background">
@@ -95,7 +96,18 @@ export default async function EventDetailPage({ params }: Props) {
 
           <div className="flex flex-col gap-4">
             <InfoField icon={User} label="Host">{event.host}</InfoField>
-            <InfoField icon={Calendar} label="Date & Time"><EventDatetime datetime={event.datetime} /></InfoField>
+            <InfoField icon={Calendar} label={camp ? "Dates" : "Date & Time"}>
+              {camp ? (
+                <span>
+                  <EventDatetime datetime={event.datetime} />
+                  {camp.endDate && (
+                    <> &rarr; {new Date(`${camp.endDate}T12:00:00.000Z`).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" })}</>
+                  )}
+                </span>
+              ) : (
+                <EventDatetime datetime={event.datetime} />
+              )}
+            </InfoField>
             <InfoField icon={MapPin} label="Location">{event.location}</InfoField>
             {event.series && (
               <InfoField icon={Repeat} label="Part of Series">
@@ -118,6 +130,15 @@ export default async function EventDetailPage({ params }: Props) {
             {event.description}
           </p>
         </div>
+
+        {/* Camp agenda */}
+        {camp && camp.agenda.length > 0 && (
+          <CampAgenda
+            agenda={camp.agenda}
+            startDate={event.datetime.toISOString().slice(0, 10)}
+            endDate={camp.endDate}
+          />
+        )}
       </div>
 
       <EventActionBar
@@ -135,6 +156,8 @@ export default async function EventDetailPage({ params }: Props) {
         isCancelled={!!event.cancelledAt}
         isDraft={event.isDraft}
         attendees={attendees}
+        camp={camp}
+        campStartDate={event.datetime.toISOString().slice(0, 10)}
       />
     </div>
   );

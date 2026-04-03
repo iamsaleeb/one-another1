@@ -192,6 +192,7 @@ model EventAttendee {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   phone     String?
   notes     String?
+  metadata  Json?    @db.JsonB
   createdAt DateTime @default(now())
 
   @@unique([eventId, userId])

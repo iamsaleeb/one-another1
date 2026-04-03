@@ -21,7 +21,7 @@ export default async function EditEventPage({ params }: Props) {
   if (!churches.some((c) => c.id === event.churchId)) notFound();
 
   const datetimeISO = event.datetime.toISOString();
-  const { registration } = parseEventMetadata(event.metadata);
+  const { registration, camp } = parseEventMetadata(event.metadata);
 
   return (
     <div className="mx-auto max-w-lg">
@@ -47,6 +47,9 @@ export default async function EditEventPage({ params }: Props) {
             price: event.price,
             isDraft: event.isDraft,
             photoUrl: event.photoUrl,
+            campEndDate: camp?.endDate,
+            campAllowPartialRegistration: camp?.allowPartialRegistration,
+            campAgenda: camp?.agenda,
           }}
           churches={churches}
         />

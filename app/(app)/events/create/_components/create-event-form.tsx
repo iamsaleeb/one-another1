@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Repeat } from "lucide-react";
@@ -29,6 +30,7 @@ import { createEventAction } from "@/lib/actions/events";
 import { localInputsToUtcDate } from "@/lib/datetime";
 import { PhotoUploadField } from "@/components/photo-upload-field";
 import { CATEGORY_OPTIONS } from "@/types/search";
+import { CampDetailsSection } from "./camp-details-section";
 
 interface Church { id: string; name: string }
 interface Series { id: string; name: string; churchId: string; churchName: string }
@@ -59,11 +61,21 @@ export function CreateEventForm({
       price: undefined,
       isDraft: false,
       photoUrl: undefined,
+      campEndDate: undefined,
+      campAllowPartialRegistration: false,
+      campAgenda: [],
     },
   });
 
   const { isSubmitting } = form.formState;
   const requiresRegistration = useWatch({ control: form.control, name: "requiresRegistration" });
+  const tag = useWatch({ control: form.control, name: "tag" });
+  const startDate = useWatch({ control: form.control, name: "date" });
+  const isCamp = tag === "Camp";
+
+  useEffect(() => {
+    if (isCamp) form.setValue("requiresRegistration", true);
+  }, [isCamp, form]);
 
   const onSubmit = form.handleSubmit(async (data) => {
     const datetimeISO = localInputsToUtcDate(data.date, data.time).toISOString();
@@ -287,13 +299,15 @@ export function CreateEventForm({
             <FormItem className="flex items-center justify-between gap-3 rounded-xl border px-4 py-3">
               <div>
                 <p className="text-sm font-medium">Requires Registration</p>
-                <p className="text-xs text-muted-foreground">Attendees must fill in a registration form</p>
+                <p className="text-xs text-muted-foreground">
+                  {isCamp ? "Required for camps" : "Attendees must fill in a registration form"}
+                </p>
               </div>
               <FormControl>
                 <Switch
                   checked={field.value}
                   onCheckedChange={field.onChange}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isCamp}
                 />
               </FormControl>
             </FormItem>
@@ -361,6 +375,8 @@ export function CreateEventForm({
             />
           </div>
         )}
+
+        {isCamp && <CampDetailsSection form={form} startDate={startDate || undefined} />}
 
         <div className="flex flex-col gap-2">
           <Button type="submit" className="w-full" disabled={isSubmitting}>

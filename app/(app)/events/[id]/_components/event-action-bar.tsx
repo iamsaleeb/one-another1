@@ -7,6 +7,7 @@ import { AttendButton } from "./attend-button";
 import { RegistrationDrawer } from "./registration-drawer";
 import { AttendeesDrawer } from "./attendees-drawer";
 import type { getEventAttendees } from "@/lib/actions/data";
+import type { EventMetadata } from "@/lib/types/event-metadata";
 
 interface EventActionBarProps {
   eventId: string;
@@ -23,6 +24,8 @@ interface EventActionBarProps {
   isCancelled?: boolean;
   isDraft?: boolean;
   attendees?: Awaited<ReturnType<typeof getEventAttendees>>;
+  camp?: EventMetadata["camp"];
+  campStartDate?: string;
 }
 
 export function EventActionBar({
@@ -40,6 +43,8 @@ export function EventActionBar({
   isCancelled,
   isDraft,
   attendees,
+  camp,
+  campStartDate,
 }: EventActionBarProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [attendeesDrawerOpen, setAttendeesDrawerOpen] = useState(false);
@@ -114,6 +119,8 @@ export function EventActionBar({
           collectNotes={collectNotes}
           open={drawerOpen}
           onOpenChange={setDrawerOpen}
+          camp={camp}
+          campStartDate={campStartDate}
         />
       )}
 
@@ -125,6 +132,8 @@ export function EventActionBar({
           collectNotes={collectNotes}
           open={attendeesDrawerOpen}
           onOpenChange={setAttendeesDrawerOpen}
+          camp={camp}
+          campStartDate={campStartDate}
         />
       )}
     </>
