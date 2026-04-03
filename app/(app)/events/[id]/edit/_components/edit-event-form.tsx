@@ -30,6 +30,8 @@ import { updateEventAction, publishEventAction, unpublishEventAction } from "@/l
 import { localInputsToUtcDate } from "@/lib/datetime";
 import { PhotoUploadField } from "@/components/photo-upload-field";
 import { CATEGORY_OPTIONS } from "@/types/search";
+import { CampDetailsSection } from "@/app/(app)/events/create/_components/camp-details-section";
+import type { CampAgendaItem } from "@/lib/types/event-metadata";
 
 interface Church { id: string; name: string }
 
@@ -51,6 +53,9 @@ interface EventData {
   collectNotes: boolean;
   price?: string | null;
   isDraft: boolean;
+  campEndDate?: string;
+  campAllowPartialRegistration?: boolean;
+  campAgenda?: CampAgendaItem[];
 }
 
 export function EditEventForm({
@@ -78,12 +83,22 @@ export function EditEventForm({
       collectNotes: event.collectNotes,
       price: event.price ?? undefined,
       photoUrl: event.photoUrl ?? undefined,
+      campEndDate: event.campEndDate ?? undefined,
+      campAllowPartialRegistration: event.campAllowPartialRegistration ?? false,
+      campAgenda: event.campAgenda ?? [],
     },
   });
 
   const { isSubmitting } = form.formState;
   const [isPublishPending, startPublishTransition] = useTransition();
   const requiresRegistration = useWatch({ control: form.control, name: "requiresRegistration" });
+  const tag = useWatch({ control: form.control, name: "tag" });
+  const startDate = useWatch({ control: form.control, name: "date" });
+  const isCamp = tag === "Camp";
+
+  useEffect(() => {
+    if (isCamp) form.setValue("requiresRegistration", true);
+  }, [isCamp, form]);
 
   // Populate date/time inputs from the stored UTC datetime using the browser's local timezone.
   // This runs only on the client, so the values reflect the organiser's local timezone.
@@ -328,13 +343,15 @@ export function EditEventForm({
             <FormItem className="flex items-center justify-between gap-3 rounded-xl border px-4 py-3">
               <div>
                 <p className="text-sm font-medium">Requires Registration</p>
-                <p className="text-xs text-muted-foreground">Attendees must fill in a registration form</p>
+                <p className="text-xs text-muted-foreground">
+                  {isCamp ? "Required for camps" : "Attendees must fill in a registration form"}
+                </p>
               </div>
               <FormControl>
                 <Switch
                   checked={field.value}
                   onCheckedChange={field.onChange}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isCamp}
                 />
               </FormControl>
             </FormItem>
@@ -402,6 +419,8 @@ export function EditEventForm({
             />
           </div>
         )}
+
+        {isCamp && <CampDetailsSection form={form} startDate={startDate || undefined} />}
 
         {event.isDraft ? (
           <div className="flex flex-col gap-2">

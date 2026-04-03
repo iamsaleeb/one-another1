@@ -28,7 +28,7 @@ export async function createEventAction(data: CreateEventInput): Promise<ActionR
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  const { title, date, time, datetimeISO, location, host, tag, description, seriesId, requiresRegistration, capacity, collectPhone, collectNotes, price, isDraft, photoUrl } = parsed.data;
+  const { title, date, time, datetimeISO, location, host, tag, description, seriesId, requiresRegistration, capacity, collectPhone, collectNotes, price, isDraft, photoUrl, campEndDate, campAllowPartialRegistration, campAgenda } = parsed.data;
   let { churchId } = parsed.data;
 
   const datetime = datetimeISO ? new Date(datetimeISO) : new Date(`${date}T${time}`);
@@ -45,6 +45,11 @@ export async function createEventAction(data: CreateEventInput): Promise<ActionR
 
   const allowed = await canManageChurch(session.user.id, session.user.role, churchId);
   if (!allowed) return { error: "You are not assigned to this church." };
+
+  const isCamp = tag === "Camp";
+  if (isCamp && !campEndDate) {
+    return { fieldErrors: { campEndDate: ["End date is required for camp events"] } };
+  }
 
   const created = await prisma.event.create({
     data: {
@@ -63,6 +68,15 @@ export async function createEventAction(data: CreateEventInput): Promise<ActionR
           collectPhone: requiresRegistration ? (collectPhone ?? false) : false,
           collectNotes: requiresRegistration ? (collectNotes ?? false) : false,
         },
+        ...(isCamp && campEndDate
+          ? {
+              camp: {
+                endDate: campEndDate,
+                allowPartialRegistration: campAllowPartialRegistration ?? false,
+                agenda: campAgenda ?? [],
+              },
+            }
+          : {}),
       },
       price: price ?? null,
       photoUrl: photoUrl ?? null,
@@ -107,7 +121,7 @@ export async function updateEventAction(id: string, data: CreateEventInput): Pro
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  const { title, date, time, datetimeISO, location, host, tag, description, seriesId, requiresRegistration, capacity, collectPhone, collectNotes, price, photoUrl } = parsed.data;
+  const { title, date, time, datetimeISO, location, host, tag, description, seriesId, requiresRegistration, capacity, collectPhone, collectNotes, price, photoUrl, campEndDate, campAllowPartialRegistration, campAgenda } = parsed.data;
   let { churchId } = parsed.data;
   const newDatetime = datetimeISO ? new Date(datetimeISO) : new Date(`${date}T${time}`);
   if (Number.isNaN(newDatetime.getTime())) return { fieldErrors: { date: ["Invalid date or time"] } };
@@ -136,6 +150,11 @@ export async function updateEventAction(id: string, data: CreateEventInput): Pro
     if (!allowedNew) redirect("/");
   }
 
+  const isCamp = tag === "Camp";
+  if (isCamp && !campEndDate) {
+    return { fieldErrors: { campEndDate: ["End date is required for camp events"] } };
+  }
+
   await prisma.event.update({
     where: { id },
     data: {
@@ -152,6 +171,15 @@ export async function updateEventAction(id: string, data: CreateEventInput): Pro
           collectPhone: requiresRegistration ? (collectPhone ?? false) : false,
           collectNotes: requiresRegistration ? (collectNotes ?? false) : false,
         },
+        ...(isCamp && campEndDate
+          ? {
+              camp: {
+                endDate: campEndDate,
+                allowPartialRegistration: campAllowPartialRegistration ?? false,
+                agenda: campAgenda ?? [],
+              },
+            }
+          : {}),
       },
       price: price ?? null,
       photoUrl: photoUrl ?? null,
@@ -398,9 +426,21 @@ export async function registerEventAction(
   const session = await auth();
   if (!session?.user?.id) return { error: "You must be signed in." };
 
+  const rawSelectedDays = formData.get("selectedDays");
+  let selectedDays: string[] | undefined;
+  if (typeof rawSelectedDays === "string" && rawSelectedDays) {
+    try {
+      const parsed = JSON.parse(rawSelectedDays);
+      if (Array.isArray(parsed)) selectedDays = parsed.filter((d): d is string => typeof d === "string");
+    } catch {
+      // ignore malformed JSON
+    }
+  }
+
   const parsed = registerEventSchema.safeParse({
     phone: formData.get("phone") || undefined,
     notes: formData.get("notes") || undefined,
+    selectedDays,
   });
 
   if (!parsed.success) return { error: "Invalid form data." };
@@ -412,9 +452,25 @@ export async function registerEventAction(
 
   if (!event || event.isDraft) return { error: "Event not found." };
 
-  const { capacity } = parseEventMetadata(event.metadata).registration;
+  const eventMeta = parseEventMetadata(event.metadata);
+  const { capacity } = eventMeta.registration;
   if (capacity != null && event._count.attendees >= capacity) {
     return { error: "Sorry, this event is fully booked." };
+  }
+
+  // Validate selectedDays only when the event is a camp with partial registration enabled
+  let validatedSelectedDays: string[] | undefined;
+  if (eventMeta.camp?.allowPartialRegistration && eventMeta.camp.endDate) {
+    const startDate = event.datetime.toISOString().slice(0, 10);
+    const endDate = eventMeta.camp.endDate;
+    const inRange = (d: string) => d >= startDate && d <= endDate;
+
+    const days = parsed.data.selectedDays ?? [];
+    const filtered = days.filter(inRange);
+    if (filtered.length === 0) {
+      return { error: "Please select at least one valid day to attend." };
+    }
+    validatedSelectedDays = filtered;
   }
 
   await prisma.eventAttendee.create({
@@ -423,6 +479,7 @@ export async function registerEventAction(
       userId: session.user.id,
       phone: parsed.data.phone,
       notes: parsed.data.notes,
+      ...(validatedSelectedDays ? { metadata: { selectedDays: validatedSelectedDays } } : {}),
     },
   });
 

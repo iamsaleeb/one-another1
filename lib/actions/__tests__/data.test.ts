@@ -549,20 +549,16 @@ describe('getEventAttendees', () => {
   const sampleAttendees = [
     {
       id: 'ea-1',
-      eventId: 'evt-1',
-      userId: 'user-1',
       phone: '+61400000000',
       notes: 'Vegetarian',
-      createdAt: new Date(),
+      metadata: null,
       user: { id: 'user-1', name: 'Alice', email: 'alice@example.com' },
     },
     {
       id: 'ea-2',
-      eventId: 'evt-1',
-      userId: 'user-2',
       phone: null,
       notes: null,
-      createdAt: new Date(),
+      metadata: null,
       user: { id: 'user-2', name: 'Bob', email: 'bob@example.com' },
     },
   ]
@@ -575,7 +571,13 @@ describe('getEventAttendees', () => {
     expect(result).toEqual(sampleAttendees)
     expect(mockEventAttendeeFindMany).toHaveBeenCalledWith({
       where: { eventId: 'evt-1' },
-      include: { user: { select: { id: true, name: true, email: true } } },
+      select: {
+        id: true,
+        phone: true,
+        notes: true,
+        metadata: true,
+        user: { select: { id: true, name: true, email: true } },
+      },
       orderBy: { createdAt: 'asc' },
     })
   })
@@ -588,7 +590,13 @@ describe('getEventAttendees', () => {
     expect(result).toEqual([])
     expect(mockEventAttendeeFindMany).toHaveBeenCalledWith({
       where: { eventId: 'evt-empty' },
-      include: { user: { select: { id: true, name: true, email: true } } },
+      select: {
+        id: true,
+        phone: true,
+        notes: true,
+        metadata: true,
+        user: { select: { id: true, name: true, email: true } },
+      },
       orderBy: { createdAt: 'asc' },
     })
   })

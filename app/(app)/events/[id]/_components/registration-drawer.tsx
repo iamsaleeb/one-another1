@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useTransition, useEffect } from "react";
+import { useActionState, useTransition, useEffect, useState } from "react";
 import { Check } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,6 +17,7 @@ import {
   DrawerClose,
 } from "@/components/ui/drawer";
 import { registerEventAction, unattendEventAction, type RegisterEventState } from "@/lib/actions/events";
+import type { EventMetadata } from "@/lib/types/event-metadata";
 
 interface RegistrationDrawerProps {
   eventId: string;
@@ -27,6 +29,25 @@ interface RegistrationDrawerProps {
   collectNotes: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  camp?: EventMetadata["camp"];
+  campStartDate?: string;
+}
+
+/** Returns all ISO dates (YYYY-MM-DD) between startDate and endDate inclusive */
+function getCampDays(startDate: string, endDate: string): string[] {
+  const days: string[] = [];
+  const current = new Date(`${startDate}T12:00:00.000Z`);
+  const end = new Date(`${endDate}T12:00:00.000Z`);
+  while (current <= end) {
+    days.push(current.toISOString().slice(0, 10));
+    current.setUTCDate(current.getUTCDate() + 1);
+  }
+  return days;
+}
+
+function formatDayLabel(isoDate: string): string {
+  const d = new Date(`${isoDate}T12:00:00.000Z`);
+  return d.toLocaleDateString("en", { weekday: "long", day: "numeric", month: "long" });
 }
 
 export function RegistrationDrawer({
@@ -39,6 +60,8 @@ export function RegistrationDrawer({
   collectNotes,
   open,
   onOpenChange,
+  camp,
+  campStartDate,
 }: RegistrationDrawerProps) {
   const boundAction = registerEventAction.bind(null, eventId);
   const [state, formAction, isPending] = useActionState<RegisterEventState, FormData>(
@@ -47,9 +70,27 @@ export function RegistrationDrawer({
   );
   const [unattendPending, startUnattendTransition] = useTransition();
 
+  const showPartialDays =
+    camp?.allowPartialRegistration === true &&
+    !!campStartDate &&
+    !!camp.endDate;
+
+  const allDays =
+    showPartialDays && campStartDate && camp?.endDate
+      ? getCampDays(campStartDate, camp.endDate)
+      : [];
+
+  const [selectedDays, setSelectedDays] = useState<string[]>(allDays);
+
   useEffect(() => {
     if (state.success) onOpenChange(false);
   }, [state.success, onOpenChange]);
+
+  function toggleDay(day: string) {
+    setSelectedDays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
+    );
+  }
 
   function handleUnregister() {
     startUnattendTransition(async () => {
@@ -93,6 +134,33 @@ export function RegistrationDrawer({
                 <Input value={userEmail} disabled className="bg-muted" />
               </div>
 
+              {showPartialDays && allDays.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <Label>Which days will you attend?</Label>
+                  <div className="flex flex-col gap-2 rounded-xl border px-3 py-3">
+                    {allDays.map((day) => (
+                      <div key={day} className="flex items-center gap-2.5">
+                        <Checkbox
+                          id={`day-${day}`}
+                          checked={selectedDays.includes(day)}
+                          onCheckedChange={() => toggleDay(day)}
+                          disabled={isPending}
+                        />
+                        <Label htmlFor={`day-${day}`} className="text-sm font-normal cursor-pointer">
+                          {formatDayLabel(day)}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Pass selected days as JSON to the server action */}
+                  <input
+                    type="hidden"
+                    name="selectedDays"
+                    value={JSON.stringify(selectedDays)}
+                  />
+                </div>
+              )}
+
               {collectPhone && (
                 <div className="grid gap-1.5">
                   <Label htmlFor="phone">Phone number</Label>
@@ -113,9 +181,18 @@ export function RegistrationDrawer({
                 </div>
               )}
 
-              <Button type="submit" className="w-full" disabled={isPending}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isPending || (showPartialDays ? selectedDays.length === 0 : false)}
+              >
                 {isPending ? "Registering..." : "Confirm Registration"}
               </Button>
+              {showPartialDays && selectedDays.length === 0 && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Please select at least one day to attend.
+                </p>
+              )}
             </form>
           )}
         </div>
