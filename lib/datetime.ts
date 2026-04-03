@@ -7,7 +7,7 @@ import { format, subHours } from "date-fns";
  * server (UTC) and client (local timezone); use suppressHydrationWarning on
  * the wrapping element.
  *
- * Output: "MON, 16 MAR | 09:00 AM"
+ * Output: "MON, 16 MAR | 9:00 AM"
  */
 export function formatEventDatetime(date: Date): string {
   const fmt = new Intl.DateTimeFormat("en", {
@@ -46,8 +46,10 @@ export function localInputsToUtcDate(dateStr: string, timeStr: string): Date {
 
 /**
  * Parse a YYYY-MM-DD date string into a UTC Date pinned to noon.
- * Noon UTC avoids day-shift in any timezone (all UTC offsets are within
- * ±14h, so noon UTC is still the same calendar day everywhere).
+ * Displayed via date-fns `format()` in a server component running in UTC,
+ * so the calendar date is always rendered correctly regardless of the user's
+ * timezone. Noon (rather than midnight) gives a buffer against accidental
+ * server timezone misconfiguration.
  * Use for date-only fields (e.g. dateOfBirth) that must never drift a day.
  */
 export function parseDateOfBirth(dateStr: string): Date {
