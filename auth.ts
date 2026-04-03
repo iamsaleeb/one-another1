@@ -10,7 +10,11 @@ import type { UserRole } from "@prisma/client";
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" },
+  session: {
+    strategy: "jwt",
+    maxAge: 14 * 24 * 60 * 60,  // 14 days
+    updateAge: 24 * 60 * 60,    // re-issue JWT daily to extend expiry
+  },
   providers: [
     Credentials({
       async authorize(credentials) {
