@@ -47,6 +47,10 @@ export async function createEventAction(data: CreateEventInput): Promise<ActionR
   if (!allowed) return { error: "You are not assigned to this church." };
 
   const isCamp = tag === "Camp";
+  if (isCamp && !campEndDate) {
+    return { fieldErrors: { campEndDate: ["End date is required for camp events"] } };
+  }
+
   const created = await prisma.event.create({
     data: {
       title,
@@ -147,6 +151,10 @@ export async function updateEventAction(id: string, data: CreateEventInput): Pro
   }
 
   const isCamp = tag === "Camp";
+  if (isCamp && !campEndDate) {
+    return { fieldErrors: { campEndDate: ["End date is required for camp events"] } };
+  }
+
   await prisma.event.update({
     where: { id },
     data: {
@@ -444,9 +452,25 @@ export async function registerEventAction(
 
   if (!event || event.isDraft) return { error: "Event not found." };
 
-  const { capacity } = parseEventMetadata(event.metadata).registration;
+  const eventMeta = parseEventMetadata(event.metadata);
+  const { capacity } = eventMeta.registration;
   if (capacity != null && event._count.attendees >= capacity) {
     return { error: "Sorry, this event is fully booked." };
+  }
+
+  // Validate selectedDays only when the event is a camp with partial registration enabled
+  let validatedSelectedDays: string[] | undefined;
+  if (eventMeta.camp?.allowPartialRegistration && eventMeta.camp.endDate) {
+    const startDate = event.datetime.toISOString().slice(0, 10);
+    const endDate = eventMeta.camp.endDate;
+    const inRange = (d: string) => d >= startDate && d <= endDate;
+
+    const days = parsed.data.selectedDays ?? [];
+    const filtered = days.filter(inRange);
+    if (filtered.length === 0) {
+      return { error: "Please select at least one valid day to attend." };
+    }
+    validatedSelectedDays = filtered;
   }
 
   await prisma.eventAttendee.create({
@@ -455,9 +479,7 @@ export async function registerEventAction(
       userId: session.user.id,
       phone: parsed.data.phone,
       notes: parsed.data.notes,
-      ...(parsed.data.selectedDays?.length
-        ? { metadata: { selectedDays: parsed.data.selectedDays } }
-        : {}),
+      ...(validatedSelectedDays ? { metadata: { selectedDays: validatedSelectedDays } } : {}),
     },
   });
 

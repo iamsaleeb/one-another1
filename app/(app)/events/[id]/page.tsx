@@ -8,6 +8,7 @@ import { getEventById, getEventAttendees } from "@/lib/actions/data";
 import { parseEventMetadata } from "@/lib/types/event-metadata";
 import { canManageChurch } from "@/lib/permissions";
 import { EventDatetime } from "@/components/event-datetime";
+import { formatDateOnly, parseDateOfBirth } from "@/lib/datetime";
 import { InfoField } from "@/components/ui/info-field";
 import { HeroBanner } from "@/components/ui/hero-banner";
 import { DeleteEventButton } from "./_components/delete-event-button";
@@ -101,7 +102,7 @@ export default async function EventDetailPage({ params }: Props) {
                 <span>
                   <EventDatetime datetime={event.datetime} />
                   {camp.endDate && (
-                    <> &rarr; {new Date(`${camp.endDate}T12:00:00.000Z`).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" })}</>
+                    <> &rarr; {formatDateOnly(parseDateOfBirth(camp.endDate))}</>
                   )}
                 </span>
               ) : (

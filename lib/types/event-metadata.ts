@@ -50,10 +50,15 @@ export function parseEventMetadata(raw: unknown): EventMetadata {
           : false,
       agenda: Array.isArray(c.agenda)
         ? (c.agenda as unknown[]).filter(
-            (item): item is CampAgendaItem =>
-              item !== null &&
-              typeof item === "object" &&
-              typeof (item as Record<string, unknown>).title === "string"
+            (item): item is CampAgendaItem => {
+              if (item === null || typeof item !== "object") return false;
+              const i = item as Record<string, unknown>;
+              return (
+                typeof i.id === "string" &&
+                typeof i.date === "string" &&
+                typeof i.title === "string"
+              );
+            }
           )
         : [],
     };
