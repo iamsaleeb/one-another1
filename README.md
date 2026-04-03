@@ -83,7 +83,6 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 | `npm test` | Run the test suite |
 | `npm run test:watch` | Run tests in watch mode |
 | `npm run test:coverage` | Run tests with coverage report |
-| `npm run cron` | Start the push notification worker (long-lived process) |
 
 ## Project Structure
 
@@ -117,7 +116,6 @@ lib/
   schedule-notification.ts # Schedule / cancel ScheduledNotification rows
   notification-types.ts    # Notification type keys and metadata
 scripts/
-  event-reminders-cron.ts  # Standalone cron worker (runs outside Next.js)
 prisma/
   schema.prisma   # Database schema
   seed.ts         # Database seed script
@@ -131,7 +129,7 @@ Push notifications are delivered via [Firebase Cloud Messaging (FCM)](https://fi
 
 1. **Token registration** — When the app opens on a native device, `PushNotificationProvider` requests permission and registers with FCM. The FCM token is sent to `/api/push/register-token` and stored in the `PushToken` table.
 2. **Scheduling** — Server actions write rows to the `ScheduledNotification` table when users attend events. Each row contains the user ID, notification type, scheduled time, and message payload.
-3. **Delivery** — `npm run cron` runs a long-lived Node.js process that polls `ScheduledNotification` every minute, checks the user's opt-out preferences, and sends via `firebase-admin` `sendEachForMulticast`.
+3. **Delivery** — An external cron service (cron-job.org) calls `GET /api/cron/event-reminders` every minute. The handler checks the user's opt-out preferences and sends via `firebase-admin` `sendEachForMulticast`.
 4. **Stale token cleanup** — Tokens that FCM rejects as invalid or unregistered are automatically deleted from the database.
 
 ### Notification types
@@ -141,7 +139,6 @@ Push notifications are delivered via [Firebase Cloud Messaging (FCM)](https://fi
 | `EVENT_REMINDER` | Before an event the user is attending (configurable: 1h, 2h, 4h, or 24h — default 2h) |
 | `NEW_SERIES_SESSION` | When a new session is added to a series the user follows |
 | `EVENT_CANCELLED` | When an event the user is attending is cancelled |
-| `EVENT_POSTPONED` | When an event the user is attending is rescheduled |
 
 ### Firebase setup
 
@@ -153,21 +150,28 @@ Push notifications are delivered via [Firebase Cloud Messaging (FCM)](https://fi
 
 > **Important:** `FIREBASE_PRIVATE_KEY` must use literal `\n` for newlines in `.env.local`, not actual line breaks.
 
-### Running the cron worker
+### Cron job setup
 
-The cron worker is a standalone Node.js process — it must run alongside the Next.js server in production:
+Notification delivery is triggered by an external cron service calling the API endpoint once per minute. Set up a job on [cron-job.org](https://cron-job.org) (or any equivalent service) with:
 
-```bash
-npm run cron
+| Setting | Value |
+|---|---|
+| URL | `https://your-domain.com/api/cron/event-reminders` |
+| Method | `GET` |
+| Header | `Authorization: Bearer <CRON_SECRET>` |
+| Schedule | Every 1 minute (`*/1 * * * *`) |
+
+Add `CRON_SECRET` (a long random string) to your environment variables, then use the same value in the cron-job.org request header.
+
+To trigger the endpoint manually during local development:
+
+```powershell
+Invoke-RestMethod -Uri "http://localhost:3000/api/cron/event-reminders" -Headers @{ Authorization = "Bearer <CRON_SECRET>" }
 ```
-
-The worker polls once per minute. The `noOverlap: true` option prevents overlapping runs if a batch takes longer than a minute to process.
-
-In production, run it as a separate process or systemd service alongside the Next.js server. It reads `DATABASE_URL` and the `FIREBASE_*` variables from the environment.
 
 ### User preferences
 
-Users can opt out of individual notification types at **Profile → Notifications**. All notifications are enabled by default (opt-out model). A `NotificationPreference` row is only written when the user disables a type or saves a custom config (e.g. a non-default `EVENT_REMINDER` lead time); re-enabling with no custom config deletes the row. The cron worker checks preferences at send time, so changes take effect immediately even for already-scheduled notifications.
+Users can opt out of individual notification types at **Profile → Notifications**. All notifications are enabled by default (opt-out model). A `NotificationPreference` row is only written when the user disables a type or saves a custom config (e.g. a non-default `EVENT_REMINDER` lead time); re-enabling with no custom config deletes the row. Preferences are checked at send time, so changes take effect immediately even for already-scheduled notifications.
 
 ## Mobile (Capacitor)
 
