@@ -3,6 +3,20 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
+/** Return a Date that is `days` from now, at the given time-of-day (HH:MM). */
+function future(days: number, time = "10:00"): Date {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  const [h, m] = time.split(":").map(Number);
+  d.setHours(h, m, 0, 0);
+  return d;
+}
+
+/** Return a Date that is `days` ago, at the given time-of-day (HH:MM). */
+function past(days: number, time = "10:00"): Date {
+  return future(-days, time);
+}
+
 async function main() {
   // Clean up existing data (order matters due to FK constraints)
   await prisma.event.deleteMany();
@@ -97,7 +111,7 @@ async function main() {
   // Create upcoming events
   await prisma.event.create({
     data: {
-      datetime: new Date("2025-05-10T19:30"),
+      datetime: future(7, "19:30"),
       title: "The Cross of Forgiveness",
       location: "St Mary Church",
       host: "Fr Dan Fanous",
@@ -112,7 +126,7 @@ async function main() {
 
   await prisma.event.create({
     data: {
-      datetime: new Date("2025-05-14T18:30"),
+      datetime: future(11, "18:30"),
       title: "Youth Fellowship",
       location: "St George Church",
       host: "Fr Mark Mikhail",
@@ -127,7 +141,7 @@ async function main() {
 
   await prisma.event.create({
     data: {
-      datetime: new Date("2025-05-15T09:00"),
+      datetime: future(12, "09:00"),
       title: "Community Outreach",
       location: "Downtown Community Center",
       host: "Deacon Peter",
@@ -143,7 +157,7 @@ async function main() {
   // Create past events
   await prisma.event.create({
     data: {
-      datetime: new Date("2025-03-01T10:00"),
+      datetime: past(34, "10:00"),
       title: "Sunday Worship Service",
       location: "Grace Community Church",
       host: "Fr Daniel Hanna",
@@ -158,7 +172,7 @@ async function main() {
 
   await prisma.event.create({
     data: {
-      datetime: new Date("2025-03-05T19:00"),
+      datetime: past(30, "19:00"),
       title: "Lenten Prayer Group",
       location: "New Life Fellowship",
       host: "Fr Mark Mikhail",
@@ -173,7 +187,7 @@ async function main() {
 
   await prisma.event.create({
     data: {
-      datetime: new Date("2025-03-07T18:30"),
+      datetime: past(28, "18:30"),
       title: "Youth Bible Study",
       location: "St George Church — Youth Hall",
       host: "Deacon Paul",
