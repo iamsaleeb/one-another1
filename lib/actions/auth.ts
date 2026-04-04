@@ -3,19 +3,41 @@
 import { auth, signIn, signOut } from "@/auth";
 import { AuthError } from "next-auth";
 import bcrypt from "bcryptjs";
+import { redirect } from "next/navigation";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { loginSchema, registerSchema, type LoginInput, type RegisterInput } from "@/lib/validations/auth";
+import {
+  loginSchema,
+  registerSchema,
+  resetPasswordSchema,
+  type LoginInput,
+  type RegisterInput,
+  type ResetPasswordInput,
+} from "@/lib/validations/auth";
+import { generateOtp, storeOtp, verifyOtp } from "@/lib/email/otp";
+import { sendVerificationEmail } from "@/lib/email/send-verification";
+import { sendPasswordResetEmail } from "@/lib/email/send-password-reset";
 
 export interface ActionResult {
   error?: string;
   fieldErrors?: Record<string, string[]>;
+  pendingVerification?: boolean;
 }
 
 export async function loginAction(data: LoginInput): Promise<ActionResult> {
   const parsed = loginSchema.safeParse(data);
   if (!parsed.success) {
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  }
+
+  // Check if user exists but is unverified before attempting sign-in
+  const user = await prisma.user.findUnique({ where: { email: parsed.data.email } });
+  if (user && !user.emailVerified) {
+    return {
+      error: "Please verify your email before signing in. Check your inbox for a verification code.",
+      pendingVerification: true,
+    };
   }
 
   try {
@@ -48,14 +70,52 @@ export async function registerAction(data: RegisterInput): Promise<ActionResult>
   const { name, email, password } = parsed.data;
 
   const existing = await prisma.user.findUnique({ where: { email } });
+
   if (existing) {
-    return { fieldErrors: { email: ["An account with this email already exists."] } };
+    if (existing.emailVerified) {
+      return { fieldErrors: { email: ["An account with this email already exists."] } };
+    }
+    // User exists but is unverified — resend OTP and let them continue verifying
+    const otp = generateOtp();
+    await storeOtp(`register:${email}`, otp);
+    await sendVerificationEmail(email, existing.name ?? name, otp);
+    return { pendingVerification: true };
   }
 
   const hashedPassword = await bcrypt.hash(password, 12);
 
-  await prisma.user.create({
-    data: { name, email, password: hashedPassword },
+  try {
+    await prisma.user.create({
+      data: { name, email, password: hashedPassword, emailVerified: null },
+    });
+  } catch (error) {
+    // Handle race condition where another request created the same email
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return { fieldErrors: { email: ["An account with this email already exists."] } };
+    }
+    throw error;
+  }
+
+  const otp = generateOtp();
+  await storeOtp(`register:${email}`, otp);
+  await sendVerificationEmail(email, name, otp);
+
+  return { pendingVerification: true };
+}
+
+export async function verifyRegistrationOtpAction(
+  email: string,
+  otp: string,
+  password: string
+): Promise<ActionResult> {
+  const valid = await verifyOtp(`register:${email}`, otp);
+  if (!valid) {
+    return { error: "Invalid or expired code. Please try again." };
+  }
+
+  await prisma.user.update({
+    where: { email },
+    data: { emailVerified: new Date() },
   });
 
   try {
@@ -66,12 +126,56 @@ export async function registerAction(data: RegisterInput): Promise<ActionResult>
     });
   } catch (error) {
     if (error instanceof AuthError) {
-      return { error: "Account created but sign-in failed. Please log in." };
+      return { error: "Verification succeeded but sign-in failed. Please log in." };
     }
     throw error;
   }
 
   return {};
+}
+
+export async function sendPasswordResetOtpAction(email: string): Promise<ActionResult> {
+  const user = await prisma.user.findUnique({ where: { email } });
+
+  // Always return success to prevent email enumeration
+  if (!user || !user.emailVerified) {
+    return {};
+  }
+
+  try {
+    const otp = generateOtp();
+    await storeOtp(`reset:${email}`, otp);
+    await sendPasswordResetEmail(email, otp);
+  } catch {
+    // Silently swallow — we never reveal whether the email was sent
+  }
+
+  return {};
+}
+
+export async function resetPasswordAction(
+  email: string,
+  data: ResetPasswordInput
+): Promise<ActionResult> {
+  const parsed = resetPasswordSchema.safeParse(data);
+  if (!parsed.success) {
+    return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  }
+
+  const { otp, newPassword } = parsed.data;
+
+  const valid = await verifyOtp(`reset:${email}`, otp);
+  if (!valid) {
+    return { error: "Invalid or expired code. Please try again." };
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 12);
+  await prisma.user.update({
+    where: { email },
+    data: { password: hashedPassword },
+  });
+
+  redirect("/login?reset=success");
 }
 
 export async function signOutAction() {

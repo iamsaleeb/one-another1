@@ -30,9 +30,14 @@ describe('LoginForm', () => {
 
   it('renders a link to the register page', () => {
     render(<LoginForm />)
-    expect(screen.getByRole('link', { name: /sign up/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /sign up/i })).toHaveAttribute('href', '/register')
+  })
+
+  it('renders a link to the forgot password page', () => {
+    render(<LoginForm />)
+    expect(screen.getByRole('link', { name: /forgot your password/i })).toHaveAttribute(
       'href',
-      '/register'
+      '/forgot-password'
     )
   })
 
@@ -64,6 +69,24 @@ describe('LoginForm', () => {
     await userEvent.click(screen.getByRole('button', { name: /login/i }))
     await waitFor(() =>
       expect(screen.getByText('Invalid email or password.')).toBeInTheDocument()
+    )
+  })
+
+  it('shows verify email error and link to register when pendingVerification is true', async () => {
+    mockLoginAction.mockResolvedValue({
+      error: 'Please verify your email before signing in.',
+      pendingVerification: true,
+    })
+    render(<LoginForm />)
+    await userEvent.type(screen.getByLabelText(/email/i), 'user@example.com')
+    await userEvent.type(screen.getByLabelText(/password/i), 'pass1234')
+    await userEvent.click(screen.getByRole('button', { name: /login/i }))
+    await waitFor(() =>
+      expect(screen.getByText(/verify your email/i)).toBeInTheDocument()
+    )
+    expect(screen.getByRole('link', { name: /go to sign up to verify/i })).toHaveAttribute(
+      'href',
+      '/register'
     )
   })
 

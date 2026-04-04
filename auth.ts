@@ -29,6 +29,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const passwordMatch = await bcrypt.compare(password, user.password);
         if (!passwordMatch) return null;
 
+        // Block sign-in for unverified users at the auth layer
+        if (!user.emailVerified) return null;
+
         return user;
       },
     }),
@@ -40,6 +43,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id;
         token.role = (user as { role?: UserRole }).role;
         token.onboardingCompleted = (user as { onboardingCompleted?: boolean }).onboardingCompleted ?? false;
+        token.emailVerified = (user as { emailVerified?: Date | null }).emailVerified ?? null;
       }
       if (trigger === "update" && session?.onboardingCompleted !== undefined) {
         token.onboardingCompleted = session.onboardingCompleted;
@@ -55,6 +59,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       if (session.user) {
         session.user.onboardingCompleted = token.onboardingCompleted;
+        session.user.emailVerified = token.emailVerified;
       }
       return session;
     },
