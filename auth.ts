@@ -43,7 +43,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id;
         token.role = (user as { role?: UserRole }).role;
         token.onboardingCompleted = (user as { onboardingCompleted?: boolean }).onboardingCompleted ?? false;
-        token.emailVerified = (user as { emailVerified?: Date | null }).emailVerified ?? null;
+        token.isEmailVerified = !!(user as { emailVerified?: Date | null }).emailVerified;
       }
       if (trigger === "update" && session?.onboardingCompleted !== undefined) {
         token.onboardingCompleted = session.onboardingCompleted;
@@ -59,7 +59,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       if (session.user) {
         session.user.onboardingCompleted = token.onboardingCompleted;
-        session.user.emailVerified = token.emailVerified;
+        session.user.isEmailVerified = token.isEmailVerified ?? false;
       }
       return session;
     },

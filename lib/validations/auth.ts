@@ -18,7 +18,7 @@ export const registerSchema = z
   });
 
 export const otpSchema = z.object({
-  otp: z.string().length(6, "Code must be 6 digits"),
+  otp: z.string().regex(/^\d{6}$/, "Code must be 6 digits"),
 });
 
 export const forgotPasswordSchema = z.object({
@@ -27,7 +27,7 @@ export const forgotPasswordSchema = z.object({
 
 export const resetPasswordSchema = z
   .object({
-    otp: z.string().length(6, "Code must be 6 digits"),
+    otp: z.string().regex(/^\d{6}$/, "Code must be 6 digits"),
     newPassword: z.string().min(8, "Password must be at least 8 characters"),
     confirmNewPassword: z.string(),
   })

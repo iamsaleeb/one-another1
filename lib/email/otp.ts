@@ -24,7 +24,10 @@ export async function storeOtp(
 }
 
 export async function verifyOtp(identifier: string, otp: string): Promise<boolean> {
-  const record = await prisma.verificationToken.findFirst({ where: { identifier } });
+  const record = await prisma.verificationToken.findFirst({
+    where: { identifier },
+    orderBy: { expires: "desc" },
+  });
   if (!record || record.expires < new Date()) return false;
 
   // Constant-time comparison to prevent timing attacks

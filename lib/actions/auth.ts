@@ -32,7 +32,10 @@ export async function loginAction(data: LoginInput): Promise<ActionResult> {
   }
 
   // Check if user exists but is unverified before attempting sign-in
-  const user = await prisma.user.findUnique({ where: { email: parsed.data.email } });
+  const user = await prisma.user.findUnique({
+    where: { email: parsed.data.email },
+    select: { emailVerified: true },
+  });
   if (user && !user.emailVerified) {
     return {
       error: "Please verify your email before signing in. Check your inbox for a verification code.",
@@ -98,7 +101,11 @@ export async function registerAction(data: RegisterInput): Promise<ActionResult>
 
   const otp = generateOtp();
   await storeOtp(`register:${email}`, otp);
-  await sendVerificationEmail(email, name, otp);
+  try {
+    await sendVerificationEmail(email, name, otp);
+  } catch {
+    // Email failure is non-fatal — user can resend from the verification step
+  }
 
   return { pendingVerification: true };
 }
