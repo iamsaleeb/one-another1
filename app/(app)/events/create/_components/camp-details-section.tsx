@@ -172,7 +172,7 @@ export function CampDetailsSection({ form, startDate }: CampDetailsSectionProps)
           className="w-full"
           onClick={() =>
             append({
-              id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`,
+              id: crypto.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`,
               date: startDate ?? "",
               time: undefined,
               title: "",
