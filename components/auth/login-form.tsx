@@ -39,7 +39,10 @@ export function LoginForm({
   const onSubmit = form.handleSubmit(async (data) => {
     const result = await loginAction(data);
     if (result?.error) {
-      form.setError("root", { message: result.error });
+      form.setError("root", {
+        message: result.error,
+        type: result.pendingVerification ? "pendingVerification" : "manual",
+      });
     }
     if (result?.fieldErrors) {
       Object.entries(result.fieldErrors).forEach(([field, msgs]) =>
@@ -61,7 +64,14 @@ export function LoginForm({
               <div className="grid gap-6">
                 {form.formState.errors.root && (
                   <Alert variant="destructive">
-                    <AlertDescription>{form.formState.errors.root.message}</AlertDescription>
+                    <AlertDescription>
+                      {form.formState.errors.root.message}{" "}
+                      {form.formState.errors.root.type === "pendingVerification" && (
+                        <Link href="/register" className="underline underline-offset-4">
+                          Go to sign up to verify.
+                        </Link>
+                      )}
+                    </AlertDescription>
                   </Alert>
                 )}
                 <div className="grid gap-6">
@@ -90,12 +100,12 @@ export function LoginForm({
                       <FormItem>
                         <div className="flex items-center">
                           <FormLabel>Password</FormLabel>
-                          <a
-                            href="#"
+                          <Link
+                            href="/forgot-password"
                             className="ml-auto text-sm underline-offset-4 hover:underline"
                           >
                             Forgot your password?
-                          </a>
+                          </Link>
                         </div>
                         <FormControl>
                           <Input

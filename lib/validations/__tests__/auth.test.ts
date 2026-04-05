@@ -1,5 +1,11 @@
 import { z } from 'zod'
-import { loginSchema, registerSchema } from '@/lib/validations/auth'
+import {
+  loginSchema,
+  registerSchema,
+  otpSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+} from '@/lib/validations/auth'
 
 describe('loginSchema', () => {
   const valid = { email: 'user@example.com', password: 'secret123' }
@@ -116,5 +122,73 @@ describe('registerSchema', () => {
         confirmPassword: '12345678',
       }).success
     ).toBe(true)
+  })
+})
+
+describe('otpSchema', () => {
+  it('accepts a 6-digit string', () => {
+    expect(otpSchema.safeParse({ otp: '123456' }).success).toBe(true)
+  })
+
+  it('rejects fewer than 6 digits', () => {
+    const result = otpSchema.safeParse({ otp: '12345' })
+    expect(result.success).toBe(false)
+  })
+
+  it('rejects more than 6 digits', () => {
+    const result = otpSchema.safeParse({ otp: '1234567' })
+    expect(result.success).toBe(false)
+  })
+
+  it('rejects empty string', () => {
+    expect(otpSchema.safeParse({ otp: '' }).success).toBe(false)
+  })
+})
+
+describe('forgotPasswordSchema', () => {
+  it('accepts a valid email', () => {
+    expect(forgotPasswordSchema.safeParse({ email: 'user@example.com' }).success).toBe(true)
+  })
+
+  it('rejects an invalid email', () => {
+    const result = forgotPasswordSchema.safeParse({ email: 'not-an-email' })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(z.flattenError(result.error).fieldErrors.email).toBeDefined()
+    }
+  })
+})
+
+describe('resetPasswordSchema', () => {
+  const valid = { otp: '123456', newPassword: 'newpass1', confirmNewPassword: 'newpass1' }
+
+  it('accepts valid reset data', () => {
+    expect(resetPasswordSchema.safeParse(valid).success).toBe(true)
+  })
+
+  it('rejects a password shorter than 8 characters', () => {
+    const result = resetPasswordSchema.safeParse({
+      ...valid,
+      newPassword: 'short',
+      confirmNewPassword: 'short',
+    })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(z.flattenError(result.error).fieldErrors.newPassword).toBeDefined()
+    }
+  })
+
+  it('rejects mismatched passwords', () => {
+    const result = resetPasswordSchema.safeParse({ ...valid, confirmNewPassword: 'different1' })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(z.flattenError(result.error).fieldErrors.confirmNewPassword).toContain(
+        'Passwords do not match'
+      )
+    }
+  })
+
+  it('rejects an OTP that is not 6 digits', () => {
+    expect(resetPasswordSchema.safeParse({ ...valid, otp: '12345' }).success).toBe(false)
   })
 })

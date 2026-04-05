@@ -4,6 +4,13 @@ import userEvent from '@testing-library/user-event'
 
 jest.mock('@/lib/actions/auth', () => ({
   registerAction: jest.fn(),
+  verifyRegistrationOtpAction: jest.fn(),
+}))
+
+jest.mock('@/components/auth/verify-email-form', () => ({
+  VerifyEmailForm: ({ email }: { email: string }) => (
+    <div data-testid="verify-email-form">OTP form for {email}</div>
+  ),
 }))
 
 import { SignupForm } from '@/components/auth/signup-form'
@@ -34,17 +41,12 @@ describe('SignupForm', () => {
 
   it('renders the create account button', () => {
     render(<SignupForm />)
-    expect(
-      screen.getByRole('button', { name: /create account/i })
-    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /create account/i })).toBeInTheDocument()
   })
 
   it('renders a link back to the login page', () => {
     render(<SignupForm />)
-    expect(screen.getByRole('link', { name: /sign in/i })).toHaveAttribute(
-      'href',
-      '/login'
-    )
+    expect(screen.getByRole('link', { name: /sign in/i })).toHaveAttribute('href', '/login')
   })
 
   it('shows name field error when name is too short', async () => {
@@ -70,17 +72,13 @@ describe('SignupForm', () => {
     expect(mockRegisterAction).not.toHaveBeenCalled()
   })
 
-  it('shows a global error message returned from the server action', async () => {
-    mockRegisterAction.mockResolvedValue({
-      error: 'Account created but sign-in failed. Please log in.',
-    })
+  it('shows a global error returned from the server action', async () => {
+    mockRegisterAction.mockResolvedValue({ error: 'Something went wrong.' })
     render(<SignupForm />)
     await fillValidForm()
     await userEvent.click(screen.getByRole('button', { name: /create account/i }))
     await waitFor(() =>
-      expect(
-        screen.getByText('Account created but sign-in failed. Please log in.')
-      ).toBeInTheDocument()
+      expect(screen.getByText('Something went wrong.')).toBeInTheDocument()
     )
   })
 
@@ -92,9 +90,7 @@ describe('SignupForm', () => {
     await fillValidForm()
     await userEvent.click(screen.getByRole('button', { name: /create account/i }))
     await waitFor(() =>
-      expect(
-        screen.getByText('An account with this email already exists.')
-      ).toBeInTheDocument()
+      expect(screen.getByText('An account with this email already exists.')).toBeInTheDocument()
     )
   })
 
@@ -110,6 +106,17 @@ describe('SignupForm', () => {
         confirmPassword: 'securepass',
       })
     )
+  })
+
+  it('transitions to the OTP step when registerAction returns pendingVerification', async () => {
+    mockRegisterAction.mockResolvedValue({ pendingVerification: true })
+    render(<SignupForm />)
+    await fillValidForm()
+    await userEvent.click(screen.getByRole('button', { name: /create account/i }))
+    await waitFor(() =>
+      expect(screen.getByTestId('verify-email-form')).toBeInTheDocument()
+    )
+    expect(screen.getByText(/jane@example.com/)).toBeInTheDocument()
   })
 
   it('updates name field value on change', async () => {
