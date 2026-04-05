@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.2](https://github.com/iamsaleeb/one-another/compare/one-another-v0.10.1...one-another-v0.10.2) (2026-04-05)
+
+
+### Bug Fixes
+
+* added git vercel fixes ([#63](https://github.com/iamsaleeb/one-another/issues/63)) ([776fbc3](https://github.com/iamsaleeb/one-another/commit/776fbc332ad529b4ccd494a3bdbeacb665f91fef))
+
 ## [0.10.1](https://github.com/iamsaleeb/one-another/compare/one-another-v0.10.0...one-another-v0.10.1) (2026-04-05)
 
 
