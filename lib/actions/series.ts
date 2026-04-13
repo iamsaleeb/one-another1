@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+import { updateTag } from "next/cache";
 import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
 import { UserRole } from "@prisma/client";
@@ -39,7 +39,7 @@ export async function createSeriesAction(data: CreateSeriesInput): Promise<Actio
     },
   });
 
-  revalidatePath("/");
+  updateTag("series");
   redirect(`/series/${created.id}`);
 }
 
@@ -70,7 +70,8 @@ export async function updateSeriesAction(id: string, data: CreateSeriesInput): P
     data: { name, description, cadence, location, host, tag, churchId, photoUrl: photoUrl ?? null },
   });
 
-  revalidatePath("/");
+  updateTag("series");
+  updateTag(`series-${id}`);
   redirect(`/series/${id}`);
 }
 
@@ -90,7 +91,7 @@ export async function followSeriesAction(seriesId: string): Promise<FollowSeries
     return { error: "Failed to follow series." };
   }
 
-  revalidatePath(`/series/${seriesId}`);
+  updateTag(`series-${seriesId}`);
   return {};
 }
 
@@ -106,7 +107,7 @@ export async function unfollowSeriesAction(seriesId: string): Promise<FollowSeri
     return { error: "Failed to unfollow series." };
   }
 
-  revalidatePath(`/series/${seriesId}`);
+  updateTag(`series-${seriesId}`);
   return {};
 }
 
@@ -121,6 +122,7 @@ export async function deleteSeriesAction(id: string): Promise<void> {
   if (!allowed) redirect("/");
 
   await prisma.series.delete({ where: { id } });
-  revalidatePath("/");
+  updateTag("series");
+  updateTag(`series-${id}`);
   redirect("/organiser");
 }

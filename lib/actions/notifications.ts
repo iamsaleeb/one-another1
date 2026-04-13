@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
-import { revalidatePath } from "next/cache";
+import { updateTag } from "next/cache";
 import { type Prisma } from "@prisma/client";
 import { NOTIFICATION_TYPES, type NotificationTypeKey } from "@/lib/notification-types";
 import { updateReminderScheduleForUser } from "@/lib/schedule-notification";
@@ -101,6 +101,6 @@ export async function updateNotificationPreferenceAction(
     await updateReminderScheduleForUser(session.user.id, config.hoursBeforeEvent);
   }
 
-  revalidatePath("/profile/notifications");
+  updateTag(`user-notifications-${session.user.id}`);
   return {};
 }

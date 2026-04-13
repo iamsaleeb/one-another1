@@ -1,6 +1,6 @@
-jest.mock('react', () => ({
-  ...jest.requireActual('react'),
-  cache: (fn: (...args: unknown[]) => unknown) => fn,
+jest.mock('next/cache', () => ({
+  cacheTag: jest.fn(),
+  cacheLife: jest.fn(),
 }))
 
 jest.mock('@/lib/db', () => ({

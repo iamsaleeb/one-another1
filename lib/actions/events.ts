@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+import { updateTag } from "next/cache";
 import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
 import { UserRole } from "@prisma/client";
@@ -108,7 +108,7 @@ export async function createEventAction(data: CreateEventInput): Promise<ActionR
     }
   }
 
-  revalidatePath("/");
+  updateTag("events");
   redirect(isDraft ? "/organiser" : seriesId ? `/series/${seriesId}` : "/my-events");
 }
 
@@ -196,7 +196,8 @@ export async function updateEventAction(id: string, data: CreateEventInput): Pro
     }
   }
 
-  revalidatePath("/");
+  updateTag("events");
+  updateTag(`event-${id}`);
   redirect(`/events/${id}`);
 }
 
@@ -239,7 +240,7 @@ export async function cancelEventAction(id: string, reason: string): Promise<voi
     console.error("EVENT_CANCELLED push failed:", err);
   }
 
-  revalidatePath("/");
+  updateTag(`event-${id}`);
   redirect(`/events/${id}`);
 }
 
@@ -258,7 +259,7 @@ export async function uncancelEventAction(id: string): Promise<void> {
     data: { cancelledAt: null, cancellationReason: null },
   });
 
-  revalidatePath("/");
+  updateTag(`event-${id}`);
   redirect(`/events/${id}`);
 }
 
@@ -318,7 +319,8 @@ export async function publishEventAction(id: string): Promise<ActionResult> {
     }
   }
 
-  revalidatePath("/");
+  updateTag("events");
+  updateTag(`event-${id}`);
   redirect(`/events/${id}`);
 }
 
@@ -342,7 +344,8 @@ export async function unpublishEventAction(id: string): Promise<ActionResult> {
     console.error("Failed to cancel reminders on unpublish:", err);
   }
 
-  revalidatePath("/");
+  updateTag("events");
+  updateTag(`event-${id}`);
   redirect(`/events/${id}`);
 }
 
@@ -363,7 +366,8 @@ export async function deleteEventAction(id: string): Promise<void> {
   }
 
   await prisma.event.delete({ where: { id } });
-  revalidatePath("/");
+  updateTag("events");
+  updateTag(`event-${id}`);
   redirect("/organiser");
 }
 
@@ -391,7 +395,7 @@ export async function attendEventAction(eventId: string): Promise<AttendEventSta
     console.error("Failed to schedule event reminder:", err);
   }
 
-  revalidatePath(`/events/${eventId}`);
+  updateTag(`event-${eventId}`);
   return {};
 }
 
@@ -409,7 +413,7 @@ export async function unattendEventAction(eventId: string): Promise<AttendEventS
     console.error("Failed to cancel event reminder:", err);
   }
 
-  revalidatePath(`/events/${eventId}`);
+  updateTag(`event-${eventId}`);
   return {};
 }
 
@@ -493,6 +497,6 @@ export async function registerEventAction(
     console.error("Failed to schedule event reminder after registration:", err);
   }
 
-  revalidatePath(`/events/${eventId}`);
+  updateTag(`event-${eventId}`);
   return { success: true };
 }
