@@ -70,6 +70,7 @@ export async function updateSeriesAction(id: string, data: CreateSeriesInput): P
     data: { name, description, cadence, location, host, tag, churchId, photoUrl: photoUrl ?? null },
   });
 
+  updateTag("events");
   updateTag("series");
   updateTag(`series-${id}`);
   redirect(`/series/${id}`);
@@ -124,6 +125,7 @@ export async function deleteSeriesAction(id: string): Promise<void> {
   if (!allowed) redirect("/");
 
   await prisma.series.delete({ where: { id } });
+  updateTag("events");
   updateTag("series");
   updateTag(`series-${id}`);
   redirect("/organiser");

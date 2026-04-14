@@ -206,6 +206,31 @@ export async function getOrganisersByChurch(churchId: string) {
   return assignments.map((a) => a.user);
 }
 
+export async function getAdminChurches(userId: string) {
+  cacheTag("churches");
+  const assignments = await prisma.churchAdmin.findMany({
+    where: { userId },
+    select: {
+      church: {
+        select: {
+          id: true,
+          name: true,
+          organisers: {
+            select: { user: { select: { id: true, name: true, email: true } } },
+            orderBy: { user: { name: "asc" } },
+          },
+        },
+      },
+    },
+    orderBy: { church: { name: "asc" } },
+  });
+  return assignments.map((a) => ({
+    id: a.church.id,
+    name: a.church.name,
+    organisers: a.church.organisers.map((o) => o.user),
+  }));
+}
+
 export async function getSeries() {
   cacheTag("series");
   return prisma.series.findMany({

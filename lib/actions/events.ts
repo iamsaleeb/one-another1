@@ -216,7 +216,7 @@ export async function cancelEventAction(id: string, reason: string): Promise<voi
 
   const event = await prisma.event.findUnique({
     where: { id },
-    select: { churchId: true, title: true },
+    select: { churchId: true, title: true, seriesId: true },
   });
   if (!event) redirect("/organiser");
 
@@ -251,6 +251,10 @@ export async function cancelEventAction(id: string, reason: string): Promise<voi
 
   updateTag("events");
   updateTag(`event-${id}`);
+  if (event.seriesId) {
+    updateTag("series");
+    updateTag(`series-${event.seriesId}`);
+  }
   redirect(`/events/${id}`);
 }
 
@@ -258,7 +262,7 @@ export async function uncancelEventAction(id: string): Promise<void> {
   const session = await auth();
   if (session?.user?.role !== UserRole.ORGANISER && session?.user?.role !== UserRole.ADMIN) redirect("/");
 
-  const event = await prisma.event.findUnique({ where: { id }, select: { churchId: true } });
+  const event = await prisma.event.findUnique({ where: { id }, select: { churchId: true, seriesId: true } });
   if (!event) redirect("/organiser");
 
   const allowed = await canManageChurch(session.user.id, session.user.role, event.churchId);
@@ -269,7 +273,12 @@ export async function uncancelEventAction(id: string): Promise<void> {
     data: { cancelledAt: null, cancellationReason: null },
   });
 
+  updateTag("events");
   updateTag(`event-${id}`);
+  if (event.seriesId) {
+    updateTag("series");
+    updateTag(`series-${event.seriesId}`);
+  }
   redirect(`/events/${id}`);
 }
 
