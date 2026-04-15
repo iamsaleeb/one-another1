@@ -210,7 +210,7 @@ export async function updateEventAction(id: string, data: CreateEventInput): Pro
   }
 
   invalidateEventCaches(id, existing.churchId);
-  if (churchId !== existing.churchId) updateTag(`church-${churchId}`);
+  if (churchId && churchId !== existing.churchId) updateTag(`church-${churchId}`);
   const affectedSeriesIds = [...new Set([existing.seriesId, seriesId ?? null].filter(Boolean) as string[])];
   if (affectedSeriesIds.length > 0) {
     updateTag("series");
