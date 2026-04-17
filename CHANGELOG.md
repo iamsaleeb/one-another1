@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.1](https://github.com/iamsaleeb/one-another/compare/one-another-v0.12.0...one-another-v0.12.1) (2026-04-17)
+
+
+### Bug Fixes
+
+* big refactor of server actions ([#75](https://github.com/iamsaleeb/one-another/issues/75)) ([0f47570](https://github.com/iamsaleeb/one-another/commit/0f475708bdd9337e99145264032653587c421a79))
+* fixed caching issues ([#73](https://github.com/iamsaleeb/one-another/issues/73)) ([615192a](https://github.com/iamsaleeb/one-another/commit/615192a5b21a48e9a16338b5021fdc0840fb8621))
+
 ## [0.12.0](https://github.com/iamsaleeb/one-another/compare/one-another-v0.11.0...one-another-v0.12.0) (2026-04-16)
 
 
