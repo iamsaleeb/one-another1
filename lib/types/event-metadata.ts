@@ -1,7 +1,9 @@
+import { z } from "zod";
+
 export interface CampAgendaItem {
   id: string;
-  date: string;        // ISO date YYYY-MM-DD
-  time?: string;       // HH:mm, optional
+  date: string;
+  time?: string;
   title: string;
   description?: string;
 }
@@ -13,69 +15,50 @@ export interface EventMetadata {
     collectNotes: boolean;
   };
   camp?: {
-    endDate: string;                   // ISO date YYYY-MM-DD
+    endDate: string;
     allowPartialRegistration: boolean;
     agenda: CampAgendaItem[];
   };
 }
 
 export interface EventAttendeeMetadata {
-  selectedDays?: string[]; // ISO dates the attendee will attend
+  selectedDays?: string[];
 }
 
-export function parseEventMetadata(raw: unknown): EventMetadata {
-  const obj =
-    raw && typeof raw === "object" && !Array.isArray(raw)
-      ? (raw as Record<string, unknown>)
-      : {};
-  const reg =
-    obj.registration &&
-    typeof obj.registration === "object" &&
-    !Array.isArray(obj.registration)
-      ? (obj.registration as Record<string, unknown>)
-      : {};
+const registrationDefault = { capacity: null, collectPhone: false, collectNotes: false };
 
-  let camp: EventMetadata["camp"] | undefined;
-  if (
-    obj.camp &&
-    typeof obj.camp === "object" &&
-    !Array.isArray(obj.camp)
-  ) {
-    const c = obj.camp as Record<string, unknown>;
-    camp = {
-      endDate: typeof c.endDate === "string" ? c.endDate : "",
-      allowPartialRegistration:
-        typeof c.allowPartialRegistration === "boolean"
-          ? c.allowPartialRegistration
-          : false,
-      agenda: Array.isArray(c.agenda)
-        ? (c.agenda as unknown[]).filter(
-            (item): item is CampAgendaItem => {
-              if (item === null || typeof item !== "object") return false;
-              const i = item as Record<string, unknown>;
-              return (
-                typeof i.id === "string" &&
-                typeof i.date === "string" &&
-                typeof i.title === "string" &&
-                (i.time === undefined || typeof i.time === "string") &&
-                (i.description === undefined || typeof i.description === "string")
-              );
-            }
+const eventMetadataSchema = z
+  .object({
+    registration: z
+      .object({
+        capacity: z.number().nullable().catch(null),
+        collectPhone: z.boolean().catch(false),
+        collectNotes: z.boolean().catch(false),
+      })
+      .catch(registrationDefault),
+    camp: z
+      .object({
+        endDate: z.string(),
+        allowPartialRegistration: z.boolean().default(false),
+        agenda: z
+          .array(
+            z.object({
+              id: z.string(),
+              date: z.string(),
+              time: z.string().optional(),
+              title: z.string(),
+              description: z.string().optional(),
+            })
           )
-        : [],
-    };
-  }
+          .default([]),
+      })
+      .optional()
+      .catch(undefined),
+  })
+  .catch({ registration: registrationDefault });
 
-  return {
-    registration: {
-      capacity: typeof reg.capacity === "number" ? reg.capacity : null,
-      collectPhone:
-        typeof reg.collectPhone === "boolean" ? reg.collectPhone : false,
-      collectNotes:
-        typeof reg.collectNotes === "boolean" ? reg.collectNotes : false,
-    },
-    ...(camp ? { camp } : {}),
-  };
+export function parseEventMetadata(raw: unknown): EventMetadata {
+  return eventMetadataSchema.parse(raw);
 }
 
 export function parseEventAttendeeMetadata(raw: unknown): EventAttendeeMetadata {
