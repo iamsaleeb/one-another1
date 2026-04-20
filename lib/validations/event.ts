@@ -98,7 +98,8 @@ const eventMetadataSchema = z
               description: z.string().optional(),
             })
           )
-          .default([]),
+          .default([])
+          .catch([]),
       })
       .optional()
       .catch(undefined),
@@ -110,7 +111,12 @@ export function parseEventMetadata(raw: unknown): EventMetadata {
 }
 
 const eventAttendeeMetadataSchema = z
-  .object({ selectedDays: z.array(z.string()).optional() })
+  .object({
+    selectedDays: z.preprocess(
+      (val) => Array.isArray(val) ? val.filter((d): d is string => typeof d === "string") : undefined,
+      z.array(z.string()).optional()
+    ),
+  })
   .catch({});
 
 export function parseEventAttendeeMetadata(raw: unknown): EventAttendeeMetadata {
