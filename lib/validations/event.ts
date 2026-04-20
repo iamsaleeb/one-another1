@@ -73,7 +73,7 @@ export interface EventAttendeeMetadata {
   selectedDays?: string[];
 }
 
-const registrationDefault = { capacity: null, collectPhone: false, collectNotes: false };
+const makeRegistrationDefault = () => ({ capacity: null as null, collectPhone: false, collectNotes: false });
 
 const eventMetadataSchema = z
   .object({
@@ -83,7 +83,7 @@ const eventMetadataSchema = z
         collectPhone: z.boolean().catch(false),
         collectNotes: z.boolean().catch(false),
       })
-      .catch(registrationDefault),
+      .catch(makeRegistrationDefault),
     camp: z
       .object({
         endDate: z.string(),
@@ -103,7 +103,7 @@ const eventMetadataSchema = z
       .optional()
       .catch(undefined),
   })
-  .catch({ registration: registrationDefault });
+  .catch(() => ({ registration: makeRegistrationDefault() }));
 
 export function parseEventMetadata(raw: unknown): EventMetadata {
   return eventMetadataSchema.parse(raw);

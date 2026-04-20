@@ -61,11 +61,11 @@ export function invalidateSeriesFields(id: string, churchId?: string | null) {
 }
 
 /**
- * Invalidates only the specific series when a user follows/unfollows.
- * Following doesn't change series list membership.
+ * Invalidates the specific series and the user's followed-series list
+ * when a user follows/unfollows. Does not bust broad series lists since
+ * follow state is not included in getSeries() list queries.
  */
 export function invalidateSeriesFollowing(seriesId: string, userId: string) {
-  updateTag("series");
   updateTag(`series-${seriesId}`);
   updateTag(`user-series-${userId}`);
 }
