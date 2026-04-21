@@ -35,7 +35,6 @@ jest.mock('@/lib/db', () => ({
       update: jest.fn(),
       updateMany: jest.fn(),
       findMany: jest.fn(),
-      $transaction: jest.fn(),
     },
     $transaction: jest.fn(),
   },

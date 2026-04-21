@@ -9,7 +9,7 @@ interface QueueInput {
   type: string;
   title: string;
   body: string;
-  data?: Record<string, unknown>;
+  data?: Record<string, string>;
   scheduledFor?: Date;
   dedupeKey?: string;
 }
@@ -151,12 +151,12 @@ export async function rescheduleEventReminderNotifications(eventId: string, newD
     pending.map((notif) => {
       const hours = hoursMap.get(notif.userId) ?? DEFAULT_HOURS_BEFORE_EVENT;
       const newScheduledFor = subHours(newDatetime, hours);
-      const existingData = (notif.data ?? {}) as Record<string, unknown>;
+      const existingData = (notif.data ?? {}) as Record<string, string>;
       return prisma.notification.update({
         where: { id: notif.id },
         data: {
           scheduledFor: newScheduledFor,
-          body: `Event starts in ${hours === 1 ? '1 hour' : `${hours} hours`}`,
+          body: `${existingData.eventTitle} starts in ${hours === 1 ? '1 hour' : `${hours} hours`}`,
           data: { ...existingData, eventDatetime: newDatetime.toISOString() },
         },
       });
@@ -175,8 +175,8 @@ export async function updateUserReminderSchedule(userId: string, newHoursBeforeE
   });
 
   const updates = pending.flatMap((notif) => {
-    const data = (notif.data ?? {}) as Record<string, unknown>;
-    const eventDatetime = new Date(data.eventDatetime as string);
+    const data = (notif.data ?? {}) as Record<string, string>;
+    const eventDatetime = new Date(data.eventDatetime);
     const newScheduledFor = subHours(eventDatetime, newHoursBeforeEvent);
     if (newScheduledFor <= new Date()) return [];
     return [
@@ -184,7 +184,7 @@ export async function updateUserReminderSchedule(userId: string, newHoursBeforeE
         where: { id: notif.id },
         data: {
           scheduledFor: newScheduledFor,
-          body: `Event starts in ${newHoursBeforeEvent === 1 ? '1 hour' : `${newHoursBeforeEvent} hours`}`,
+          body: `${data.eventTitle} starts in ${newHoursBeforeEvent === 1 ? '1 hour' : `${newHoursBeforeEvent} hours`}`,
         },
       }),
     ];

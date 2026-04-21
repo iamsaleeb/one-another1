@@ -1,8 +1,9 @@
+import { type ElementType } from 'react';
 import { Bell, CalendarX, Repeat } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import type { InboxNotification } from '@/lib/notifications/inbox';
 
-const TYPE_ICON: Record<string, React.ElementType> = {
+const TYPE_ICON: Record<string, ElementType> = {
   EVENT_REMINDER: Bell,
   NEW_SERIES_SESSION: Repeat,
   EVENT_CANCELLED: CalendarX,

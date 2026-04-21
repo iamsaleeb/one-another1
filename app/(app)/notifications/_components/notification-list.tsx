@@ -7,14 +7,15 @@ import { markReadAction } from '@/lib/actions/notifications';
 import type { InboxNotification } from '@/lib/notifications/inbox';
 
 export function NotificationList({ notifications }: { notifications: InboxNotification[] }) {
+  const hasUnread = notifications.some((n) => n.readAt === null);
+
   useEffect(() => {
-    if (notifications.some((n) => n.readAt === null)) {
+    if (hasUnread) {
       markReadAction().catch((err) =>
         console.error('[NotificationList] markReadAction failed:', err)
       );
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [hasUnread]);
 
   if (notifications.length === 0) {
     return (
