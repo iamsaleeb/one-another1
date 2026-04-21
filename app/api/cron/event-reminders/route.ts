@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { sendPushToUsers } from "@/lib/notifications";
 import type { NotificationTypeKey } from "@/lib/notification-types";
+import { processNotifications } from "@/lib/notifications/process";
 
 const BATCH_SIZE = 100;
 
@@ -57,8 +58,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const processed = await processScheduledNotifications();
-    return NextResponse.json({ ok: true, processed });
+    const oldProcessed = await processScheduledNotifications();
+    const { processed: newProcessed } = await processNotifications();
+    return NextResponse.json({ ok: true, processed: oldProcessed + newProcessed });
   } catch (err) {
     console.error(`[${new Date().toISOString()}] Notification cron error:`, err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

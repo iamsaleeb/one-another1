@@ -18,14 +18,18 @@ jest.mock('@/lib/db', () => ({
   },
 }))
 
-jest.mock('@/lib/schedule-notification', () => ({
-  updateReminderScheduleForUser: jest.fn(),
+jest.mock('@/lib/notifications/queue', () => ({
+  updateUserReminderSchedule: jest.fn(),
+}))
+
+jest.mock('@/lib/notifications/inbox', () => ({
+  markNotificationsRead: jest.fn(),
 }))
 
 import { auth } from '@/auth'
 import { prisma } from '@/lib/db'
 import { updateTag } from 'next/cache'
-import { updateReminderScheduleForUser } from '@/lib/schedule-notification'
+import { updateUserReminderSchedule } from '@/lib/notifications/queue'
 import {
   getNotificationPreferencesAction,
   updateNotificationPreferenceAction,
@@ -35,7 +39,7 @@ const mockAuth = auth as jest.Mock
 const mockPrefFindMany = prisma.notificationPreference.findMany as jest.Mock
 const mockPrefUpsert = prisma.notificationPreference.upsert as jest.Mock
 const mockPrefDeleteMany = prisma.notificationPreference.deleteMany as jest.Mock
-const mockUpdateReminderSchedule = updateReminderScheduleForUser as jest.Mock
+const mockUpdateReminderSchedule = updateUserReminderSchedule as jest.Mock
 const mockUpdateTag = updateTag as jest.Mock
 
 beforeEach(() => {
@@ -103,7 +107,7 @@ describe('updateNotificationPreferenceAction', () => {
       expect(mockUpdateTag).toHaveBeenCalledWith('user-notifications-user-1')
     })
 
-    it('does not call updateReminderScheduleForUser when re-enabling with no config', async () => {
+    it('does not call updateUserReminderSchedule when re-enabling with no config', async () => {
       await updateNotificationPreferenceAction('EVENT_REMINDER', true)
 
       expect(mockUpdateReminderSchedule).not.toHaveBeenCalled()
@@ -136,19 +140,19 @@ describe('updateNotificationPreferenceAction', () => {
       expect(mockPrefDeleteMany).not.toHaveBeenCalled()
     })
 
-    it('calls updateReminderScheduleForUser when EVENT_REMINDER hoursBeforeEvent changes', async () => {
+    it('calls updateUserReminderSchedule when EVENT_REMINDER hoursBeforeEvent changes', async () => {
       await updateNotificationPreferenceAction('EVENT_REMINDER', true, { hoursBeforeEvent: 4 })
 
       expect(mockUpdateReminderSchedule).toHaveBeenCalledWith('user-1', 4)
     })
 
-    it('does not call updateReminderScheduleForUser for non-EVENT_REMINDER types', async () => {
+    it('does not call updateUserReminderSchedule for non-EVENT_REMINDER types', async () => {
       await updateNotificationPreferenceAction('EVENT_CANCELLED', false)
 
       expect(mockUpdateReminderSchedule).not.toHaveBeenCalled()
     })
 
-    it('does not call updateReminderScheduleForUser when config has no hoursBeforeEvent', async () => {
+    it('does not call updateUserReminderSchedule when config has no hoursBeforeEvent', async () => {
       await updateNotificationPreferenceAction('EVENT_REMINDER', false)
 
       expect(mockUpdateReminderSchedule).not.toHaveBeenCalled()

@@ -2,12 +2,12 @@ import "server-only";
 
 import { prisma } from "@/lib/db";
 import { canManageChurch } from "@/lib/permissions";
-import { sendPushToUsers } from "@/lib/notifications";
 import {
-  scheduleEventReminder,
-  cancelAllRemindersForEvent,
-  rescheduleEventReminders,
-} from "@/lib/schedule-notification";
+  queueNotification,
+  cancelManyNotifications,
+  rescheduleEventReminderNotifications,
+  scheduleEventReminderNotification,
+} from "@/lib/notifications/queue";
 import type { CreateEventInput } from "@/lib/validations/event";
 
 async function notifySeriesFollowers(seriesId: string, title: string, eventId: string) {
@@ -15,13 +15,18 @@ async function notifySeriesFollowers(seriesId: string, title: string, eventId: s
     where: { seriesId },
     select: { userId: true },
   });
-  const followerIds = followers.map((f) => f.userId);
-  if (followerIds.length === 0) return;
-  await sendPushToUsers(followerIds, "NEW_SERIES_SESSION", "New Session Added", `A new session has been added: ${title}`, {
-    type: "new_session",
-    seriesId,
-    eventId,
-  });
+  if (followers.length === 0) return;
+  await Promise.all(
+    followers.map((f) =>
+      queueNotification({
+        userId: f.userId,
+        type: "NEW_SERIES_SESSION",
+        title: "New Session Added",
+        body: `A new session has been added: ${title}`,
+        data: { type: "new_session", seriesId, eventId },
+      })
+    )
+  );
 }
 
 async function notifyEventAttendees(eventId: string, title: string) {
@@ -29,12 +34,18 @@ async function notifyEventAttendees(eventId: string, title: string) {
     where: { eventId },
     select: { userId: true },
   });
-  const userIds = attendees.map((a) => a.userId);
-  if (userIds.length === 0) return;
-  await sendPushToUsers(userIds, "EVENT_CANCELLED", "Event Cancelled", `${title} has been cancelled`, {
-    type: "event_cancelled",
-    eventId,
-  });
+  if (attendees.length === 0) return;
+  await Promise.all(
+    attendees.map((a) =>
+      queueNotification({
+        userId: a.userId,
+        type: "EVENT_CANCELLED",
+        title: "Event Cancelled",
+        body: `${title} has been cancelled`,
+        data: { type: "event_cancelled", eventId },
+      })
+    )
+  );
 }
 
 type DalError = { error: string } | { fieldErrors: Record<string, string[]> };
@@ -223,7 +234,7 @@ export async function updateEvent(
 
   if (!existing.isDraft && newDatetime.getTime() !== existing.datetime.getTime()) {
     try {
-      await rescheduleEventReminders(id, newDatetime);
+      await rescheduleEventReminderNotifications(id, newDatetime);
     } catch (err) {
       console.error("Failed to reschedule event reminders:", err);
     }
@@ -257,7 +268,7 @@ export async function cancelEvent(
   });
 
   try {
-    await cancelAllRemindersForEvent(id);
+    await cancelManyNotifications({ type: "EVENT_REMINDER", dedupeKey: id });
     await notifyEventAttendees(id, event.title);
   } catch (err) {
     console.error("EVENT_CANCELLED push failed:", err);
@@ -315,7 +326,7 @@ export async function publishEvent(
     });
     await Promise.all(
       attendees.map((a) =>
-        scheduleEventReminder(a.userId, { id, title: event.title, datetime: event.datetime })
+        scheduleEventReminderNotification(a.userId, { id, title: event.title, datetime: event.datetime })
       )
     );
   } catch (err) {
@@ -350,7 +361,7 @@ export async function unpublishEvent(
   await prisma.event.update({ where: { id }, data: { isDraft: true } });
 
   try {
-    await cancelAllRemindersForEvent(id);
+    await cancelManyNotifications({ type: "EVENT_REMINDER", dedupeKey: id });
   } catch (err) {
     console.error("Failed to cancel reminders on unpublish:", err);
   }
@@ -373,7 +384,7 @@ export async function deleteEvent(
   if (!allowed) return { error: "Unauthorised." };
 
   try {
-    await cancelAllRemindersForEvent(id);
+    await cancelManyNotifications({ type: "EVENT_REMINDER", dedupeKey: id });
   } catch (err) {
     console.error("Failed to cancel reminders before delete:", err);
   }
