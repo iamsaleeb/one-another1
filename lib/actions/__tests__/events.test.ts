@@ -25,29 +25,28 @@ jest.mock('@/lib/db', () => ({
     seriesFollower: {
       findMany: jest.fn(),
     },
-    scheduledNotification: {
-      findFirst: jest.fn(),
-      findMany: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      updateMany: jest.fn(),
-    },
     notificationPreference: {
       findUnique: jest.fn(),
       findMany: jest.fn(),
     },
+    notification: {
+      create: jest.fn(),
+      upsert: jest.fn(),
+      update: jest.fn(),
+      updateMany: jest.fn(),
+      findMany: jest.fn(),
+    },
+    $transaction: jest.fn(),
   },
 }))
 
-jest.mock('@/lib/schedule-notification', () => ({
-  scheduleEventReminder: jest.fn(),
-  cancelEventReminder: jest.fn(),
-  cancelAllRemindersForEvent: jest.fn(),
-  rescheduleEventReminders: jest.fn(),
-}))
-
-jest.mock('@/lib/notifications', () => ({
-  sendPushToUsers: jest.fn(),
+jest.mock('@/lib/notifications/queue', () => ({
+  queueNotification: jest.fn(),
+  cancelNotification: jest.fn(),
+  cancelManyNotifications: jest.fn(),
+  rescheduleEventReminderNotifications: jest.fn(),
+  scheduleEventReminderNotification: jest.fn(),
+  updateUserReminderSchedule: jest.fn(),
 }))
 
 jest.mock('@/auth', () => ({
@@ -282,7 +281,7 @@ describe('createEventAction', () => {
   })
 
   it('handles series push notification failure gracefully', async () => {
-    const mockSendPush = jest.requireMock('@/lib/notifications').sendPushToUsers as jest.Mock
+    const mockSendPush = jest.requireMock('@/lib/notifications/queue').queueNotification as jest.Mock
     mockSeriesFindUnique.mockResolvedValue({ churchId: 'ch-1' })
     mockEventCreate.mockResolvedValue({ id: 'evt-series-fail' })
     mockSeriesFollowerFindMany.mockResolvedValue([{ userId: 'follower-1' }])
@@ -294,7 +293,7 @@ describe('createEventAction', () => {
   })
 
   it('does not send series push notification when saving as draft', async () => {
-    const mockSendPush = jest.requireMock('@/lib/notifications').sendPushToUsers as jest.Mock
+    const mockSendPush = jest.requireMock('@/lib/notifications/queue').queueNotification as jest.Mock
     mockSeriesFindUnique.mockResolvedValue({ churchId: 'ch-1' })
     mockEventCreate.mockResolvedValue({ id: 'evt-draft-series' })
 
@@ -305,7 +304,7 @@ describe('createEventAction', () => {
   })
 
   it('sends series push notification when publishing with seriesId and followers exist', async () => {
-    const mockSendPush = jest.requireMock('@/lib/notifications').sendPushToUsers as jest.Mock
+    const mockSendPush = jest.requireMock('@/lib/notifications/queue').queueNotification as jest.Mock
     mockSeriesFindUnique.mockResolvedValue({ churchId: 'ch-1' })
     mockEventCreate.mockResolvedValue({ id: 'evt-series' })
     mockSeriesFollowerFindMany.mockResolvedValue([{ userId: 'follower-1' }])
@@ -313,11 +312,13 @@ describe('createEventAction', () => {
     await createEventAction({ ...validData, seriesId: 'ser-1' })
 
     expect(mockSendPush).toHaveBeenCalledWith(
-      ['follower-1'],
-      'NEW_SERIES_SESSION',
-      'New Session Added',
-      expect.stringContaining(validData.title),
-      expect.objectContaining({ type: 'new_session', seriesId: 'ser-1' })
+      expect.objectContaining({
+        userId: 'follower-1',
+        type: 'NEW_SERIES_SESSION',
+        title: 'New Session Added',
+        body: expect.stringContaining(validData.title),
+        data: expect.objectContaining({ type: 'new_session', seriesId: 'ser-1' }),
+      })
     )
   })
 
@@ -393,7 +394,7 @@ describe('cancelEventAction', () => {
   })
 
   it('sends push notification to attendees on cancel', async () => {
-    const mockSendPush = jest.requireMock('@/lib/notifications').sendPushToUsers as jest.Mock
+    const mockSendPush = jest.requireMock('@/lib/notifications/queue').queueNotification as jest.Mock
     mockEventFindUnique.mockResolvedValue({ churchId: 'ch-1', title: 'Test Event' })
     mockEventUpdate.mockResolvedValue({})
     mockEventAttendeeFindMany.mockResolvedValue([{ userId: 'user-2' }])
@@ -401,16 +402,18 @@ describe('cancelEventAction', () => {
     await cancelEventAction('evt-1', 'Venue unavailable')
 
     expect(mockSendPush).toHaveBeenCalledWith(
-      ['user-2'],
-      'EVENT_CANCELLED',
-      'Event Cancelled',
-      expect.stringContaining('Test Event'),
-      expect.objectContaining({ type: 'event_cancelled', eventId: 'evt-1' })
+      expect.objectContaining({
+        userId: 'user-2',
+        type: 'EVENT_CANCELLED',
+        title: 'Event Cancelled',
+        body: expect.stringContaining('Test Event'),
+        data: expect.objectContaining({ type: 'event_cancelled', eventId: 'evt-1' }),
+      })
     )
   })
 
   it('handles EVENT_CANCELLED push failure gracefully', async () => {
-    const mockSendPush = jest.requireMock('@/lib/notifications').sendPushToUsers as jest.Mock
+    const mockSendPush = jest.requireMock('@/lib/notifications/queue').queueNotification as jest.Mock
     mockEventFindUnique.mockResolvedValue({ churchId: 'ch-1', title: 'Test Event' })
     mockEventUpdate.mockResolvedValue({})
     mockEventAttendeeFindMany.mockResolvedValue([{ userId: 'user-2' }])
@@ -490,8 +493,8 @@ describe('attendEventAction', () => {
     expect(mockEventAttendeeCreate).not.toHaveBeenCalled()
   })
 
-  it('handles scheduleEventReminder failure gracefully', async () => {
-    const mockScheduleReminder = jest.requireMock('@/lib/schedule-notification').scheduleEventReminder as jest.Mock
+  it('handles scheduleEventReminderNotification failure gracefully', async () => {
+    const mockScheduleReminder = jest.requireMock('@/lib/notifications/queue').scheduleEventReminderNotification as jest.Mock
     mockEventFindUnique.mockResolvedValue(publishedEvent)
     mockEventAttendeeCreate.mockResolvedValue({})
     mockScheduleReminder.mockRejectedValueOnce(new Error('scheduler down'))
@@ -524,8 +527,8 @@ describe('unattendEventAction', () => {
     expect(mockEventAttendeeDelete).not.toHaveBeenCalled()
   })
 
-  it('handles cancelEventReminder failure gracefully', async () => {
-    const mockCancelReminder = jest.requireMock('@/lib/schedule-notification').cancelEventReminder as jest.Mock
+  it('handles cancelNotification failure gracefully', async () => {
+    const mockCancelReminder = jest.requireMock('@/lib/notifications/queue').cancelNotification as jest.Mock
     mockEventAttendeeDelete.mockResolvedValue({})
     mockCancelReminder.mockRejectedValueOnce(new Error('scheduler down'))
 
@@ -626,8 +629,8 @@ describe('registerEventAction', () => {
     expect(mockEventAttendeeCreate).not.toHaveBeenCalled()
   })
 
-  it('handles scheduleEventReminder failure gracefully', async () => {
-    const mockScheduleReminder = jest.requireMock('@/lib/schedule-notification').scheduleEventReminder as jest.Mock
+  it('handles scheduleEventReminderNotification failure gracefully', async () => {
+    const mockScheduleReminder = jest.requireMock('@/lib/notifications/queue').scheduleEventReminderNotification as jest.Mock
     mockEventFindUnique.mockResolvedValue(publishedRegEvent)
     mockEventAttendeeCreate.mockResolvedValue({})
     mockScheduleReminder.mockRejectedValueOnce(new Error('scheduler down'))
@@ -715,7 +718,7 @@ describe('updateEventAction', () => {
   })
 
   it('reschedules reminders when datetime changes on a published event', async () => {
-    const mockReschedule = jest.requireMock('@/lib/schedule-notification').rescheduleEventReminders as jest.Mock
+    const mockReschedule = jest.requireMock('@/lib/notifications/queue').rescheduleEventReminderNotifications as jest.Mock
     mockEventFindUnique.mockResolvedValue(existingPublished)
     mockEventUpdate.mockResolvedValue({})
     // Use a different date to trigger reschedule
@@ -727,7 +730,7 @@ describe('updateEventAction', () => {
   })
 
   it('does not reschedule when the datetime is unchanged', async () => {
-    const mockReschedule = jest.requireMock('@/lib/schedule-notification').rescheduleEventReminders as jest.Mock
+    const mockReschedule = jest.requireMock('@/lib/notifications/queue').rescheduleEventReminderNotifications as jest.Mock
     // existingPublished.datetime is new Date('2026-05-01T09:00:00Z') — match exactly using local-time constructor
     const sameDate = '2026-05-01'
     const sameTime = '09:00'
@@ -741,7 +744,7 @@ describe('updateEventAction', () => {
   })
 
   it('does not reschedule reminders when the event is a draft', async () => {
-    const mockReschedule = jest.requireMock('@/lib/schedule-notification').rescheduleEventReminders as jest.Mock
+    const mockReschedule = jest.requireMock('@/lib/notifications/queue').rescheduleEventReminderNotifications as jest.Mock
     mockEventFindUnique.mockResolvedValue(existingDraft)
     mockEventUpdate.mockResolvedValue({})
 
@@ -815,13 +818,13 @@ describe('updateEventAction', () => {
 
 describe('deleteEventAction', () => {
   it('cancels reminders, deletes the event, and redirects to /organiser', async () => {
-    const mockCancelAll = jest.requireMock('@/lib/schedule-notification').cancelAllRemindersForEvent as jest.Mock
+    const mockCancelAll = jest.requireMock('@/lib/notifications/queue').cancelManyNotifications as jest.Mock
     mockEventFindUnique.mockResolvedValue({ churchId: 'ch-1' })
     mockEventDelete.mockResolvedValue({})
 
     await deleteEventAction('evt-1')
 
-    expect(mockCancelAll).toHaveBeenCalledWith('evt-1')
+    expect(mockCancelAll).toHaveBeenCalledWith({ type: 'EVENT_REMINDER', dedupeKey: 'evt-1' })
     expect(mockEventDelete).toHaveBeenCalledWith({ where: { id: 'evt-1' } })
     expect(mockUpdateTag).toHaveBeenCalledWith('events')
     expect(mockUpdateTag).toHaveBeenCalledWith('event-evt-1')
@@ -857,8 +860,8 @@ describe('deleteEventAction', () => {
     expect(mockEventDelete).not.toHaveBeenCalled()
   })
 
-  it('handles cancelAllRemindersForEvent failure gracefully', async () => {
-    const mockCancelAll = jest.requireMock('@/lib/schedule-notification').cancelAllRemindersForEvent as jest.Mock
+  it('handles cancelManyNotifications failure gracefully', async () => {
+    const mockCancelAll = jest.requireMock('@/lib/notifications/queue').cancelManyNotifications as jest.Mock
     mockEventFindUnique.mockResolvedValue({ churchId: 'ch-1' })
     mockEventDelete.mockResolvedValue({})
     mockCancelAll.mockRejectedValueOnce(new Error('scheduler down'))
@@ -871,7 +874,7 @@ describe('deleteEventAction', () => {
 })
 
 describe('publishEventAction', () => {
-  const mockScheduleReminder = jest.requireMock('@/lib/schedule-notification').scheduleEventReminder as jest.Mock
+  const mockScheduleReminderNotif = jest.requireMock('@/lib/notifications/queue').scheduleEventReminderNotification as jest.Mock
   const mockEventAttendeeFindMany = prisma.eventAttendee.findMany as jest.Mock
 
   it('sets isDraft to false, schedules reminders for attendees, and redirects to the event page', async () => {
@@ -886,9 +889,9 @@ describe('publishEventAction', () => {
       where: { id: 'evt-1' },
       data: { isDraft: false },
     })
-    expect(mockScheduleReminder).toHaveBeenCalledTimes(2)
-    expect(mockScheduleReminder).toHaveBeenCalledWith('user-2', { id: 'evt-1', title: 'Test', datetime })
-    expect(mockScheduleReminder).toHaveBeenCalledWith('user-3', { id: 'evt-1', title: 'Test', datetime })
+    expect(mockScheduleReminderNotif).toHaveBeenCalledTimes(2)
+    expect(mockScheduleReminderNotif).toHaveBeenCalledWith('user-2', { id: 'evt-1', title: 'Test', datetime })
+    expect(mockScheduleReminderNotif).toHaveBeenCalledWith('user-3', { id: 'evt-1', title: 'Test', datetime })
     expect(mockUpdateTag).toHaveBeenCalledWith('events')
     expect(mockUpdateTag).toHaveBeenCalledWith('event-evt-1')
     expect(mockRedirect).toHaveBeenCalledWith('/events/evt-1')
@@ -901,7 +904,7 @@ describe('publishEventAction', () => {
 
     await publishEventAction('evt-1')
 
-    expect(mockScheduleReminder).not.toHaveBeenCalled()
+    expect(mockScheduleReminderNotif).not.toHaveBeenCalled()
   })
 
   it('short-circuits without updating when the event is already published', async () => {
@@ -934,7 +937,7 @@ describe('publishEventAction', () => {
   })
 
   it('sends series push notification to followers when publishing a series event', async () => {
-    const mockSendPush = jest.requireMock('@/lib/notifications').sendPushToUsers as jest.Mock
+    const mockSendPush = jest.requireMock('@/lib/notifications/queue').queueNotification as jest.Mock
     const datetime = new Date('2026-05-01T09:00:00Z')
     mockEventFindUnique.mockResolvedValue({ churchId: 'ch-1', seriesId: 'ser-1', title: 'Bible Study', isDraft: true, datetime })
     mockEventUpdate.mockResolvedValue({})
@@ -944,11 +947,13 @@ describe('publishEventAction', () => {
     await publishEventAction('evt-1')
 
     expect(mockSendPush).toHaveBeenCalledWith(
-      ['follower-1', 'follower-2'],
-      'NEW_SERIES_SESSION',
-      'New Session Added',
-      expect.stringContaining('Bible Study'),
-      expect.objectContaining({ type: 'new_session', seriesId: 'ser-1', eventId: 'evt-1' })
+      expect.objectContaining({
+        userId: 'follower-1',
+        type: 'NEW_SERIES_SESSION',
+        title: 'New Session Added',
+        body: expect.stringContaining('Bible Study'),
+        data: expect.objectContaining({ type: 'new_session', seriesId: 'ser-1', eventId: 'evt-1' }),
+      })
     )
   })
 
@@ -956,7 +961,7 @@ describe('publishEventAction', () => {
     mockEventFindUnique.mockResolvedValue({ churchId: 'ch-1', seriesId: null, title: 'Test', isDraft: true, datetime: new Date() })
     mockEventUpdate.mockResolvedValue({})
     mockEventAttendeeFindMany.mockResolvedValue([{ userId: 'user-2' }])
-    mockScheduleReminder.mockRejectedValueOnce(new Error('scheduler down'))
+    mockScheduleReminderNotif.mockRejectedValueOnce(new Error('scheduler down'))
 
     await publishEventAction('evt-1')
 
@@ -964,7 +969,7 @@ describe('publishEventAction', () => {
   })
 
   it('handles NEW_SERIES_SESSION push failure gracefully', async () => {
-    const mockSendPush = jest.requireMock('@/lib/notifications').sendPushToUsers as jest.Mock
+    const mockSendPush = jest.requireMock('@/lib/notifications/queue').queueNotification as jest.Mock
     mockEventFindUnique.mockResolvedValue({ churchId: 'ch-1', seriesId: 'ser-1', title: 'Test', isDraft: true, datetime: new Date() })
     mockEventUpdate.mockResolvedValue({})
     mockEventAttendeeFindMany.mockResolvedValue([])
@@ -978,7 +983,7 @@ describe('publishEventAction', () => {
 })
 
 describe('unpublishEventAction', () => {
-  const mockCancelAll = jest.requireMock('@/lib/schedule-notification').cancelAllRemindersForEvent as jest.Mock
+  const mockCancelAll = jest.requireMock('@/lib/notifications/queue').cancelManyNotifications as jest.Mock
 
   it('sets isDraft to true, cancels pending reminders, and redirects to the event page', async () => {
     mockEventFindUnique.mockResolvedValue({ churchId: 'ch-1' })
@@ -990,7 +995,7 @@ describe('unpublishEventAction', () => {
       where: { id: 'evt-1' },
       data: { isDraft: true },
     })
-    expect(mockCancelAll).toHaveBeenCalledWith('evt-1')
+    expect(mockCancelAll).toHaveBeenCalledWith({ type: 'EVENT_REMINDER', dedupeKey: 'evt-1' })
     expect(mockUpdateTag).toHaveBeenCalledWith('events')
     expect(mockUpdateTag).toHaveBeenCalledWith('event-evt-1')
     expect(mockRedirect).toHaveBeenCalledWith('/events/evt-1')
@@ -1015,7 +1020,7 @@ describe('unpublishEventAction', () => {
     expect(mockEventUpdate).not.toHaveBeenCalled()
   })
 
-  it('handles cancelAllRemindersForEvent failure gracefully', async () => {
+  it('handles cancelManyNotifications failure gracefully', async () => {
     mockEventFindUnique.mockResolvedValue({ churchId: 'ch-1' })
     mockEventUpdate.mockResolvedValue({})
     mockCancelAll.mockRejectedValueOnce(new Error('scheduler down'))

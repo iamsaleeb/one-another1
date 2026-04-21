@@ -1,0 +1,39 @@
+import { prisma } from '@/lib/db';
+
+export interface InboxNotification {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  data: unknown;
+  sentAt: Date;
+  readAt: Date | null;
+}
+
+export async function getInboxNotifications(input: {
+  userId: string;
+  page: number;
+  pageSize: number;
+}): Promise<InboxNotification[]> {
+  const { userId, page, pageSize } = input;
+  return prisma.notification.findMany({
+    where: { userId, sentAt: { not: null } },
+    orderBy: { sentAt: 'desc' },
+    skip: (page - 1) * pageSize,
+    take: pageSize,
+    select: { id: true, type: true, title: true, body: true, data: true, sentAt: true, readAt: true },
+  }) as Promise<InboxNotification[]>;
+}
+
+export async function getUnreadCount(userId: string): Promise<number> {
+  return prisma.notification.count({
+    where: { userId, sentAt: { not: null }, readAt: null },
+  });
+}
+
+export async function markNotificationsRead(userId: string): Promise<void> {
+  await prisma.notification.updateMany({
+    where: { userId, sentAt: { not: null }, readAt: null },
+    data: { readAt: new Date() },
+  });
+}

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Church, CalendarDays, Wrench, ShieldCheck } from "lucide-react";
+import { Home, Church, CalendarDays, Wrench, ShieldCheck, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsDetailPage } from "@/hooks/use-is-detail-page";
 
@@ -10,6 +10,7 @@ const baseTabs = [
   { label: "Home", href: "/", icon: Home },
   { label: "Churches", href: "/churches", icon: Church },
   { label: "My Events", href: "/my-events", icon: CalendarDays },
+  { label: "Notifications", href: "/notifications", icon: Bell },
 ];
 
 const organiserTab = { label: "Tools", href: "/organiser", icon: Wrench };
@@ -18,9 +19,10 @@ const adminTab = { label: "Admin", href: "/admin", icon: ShieldCheck };
 interface BottomNavProps {
   isOrganiser?: boolean;
   isAdmin?: boolean;
+  unreadCount?: number;
 }
 
-export function BottomNav({ isOrganiser, isAdmin }: BottomNavProps) {
+export function BottomNav({ isOrganiser, isAdmin, unreadCount = 0 }: BottomNavProps) {
   const pathname = usePathname();
   const isDetailPage = useIsDetailPage();
 
@@ -37,6 +39,7 @@ export function BottomNav({ isOrganiser, isAdmin }: BottomNavProps) {
       <div className="flex h-16 items-center justify-around px-2">
         {tabs.map(({ label, href, icon: Icon }) => {
           const isActive = pathname === href;
+          const showDot = href === "/notifications" && unreadCount > 0;
           return (
             <Link
               key={href}
@@ -48,12 +51,17 @@ export function BottomNav({ isOrganiser, isAdmin }: BottomNavProps) {
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Icon
-                className={cn(
-                  "size-5 transition-transform",
-                  isActive && "scale-110"
+              <div className="relative">
+                <Icon
+                  className={cn(
+                    "size-5 transition-transform",
+                    isActive && "scale-110"
+                  )}
+                />
+                {showDot && (
+                  <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-destructive" />
                 )}
-              />
+              </div>
               <span>{label}</span>
             </Link>
           );

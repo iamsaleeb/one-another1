@@ -3,7 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { parseEventMetadata } from "@/lib/validations/event";
-import { scheduleEventReminder, cancelEventReminder } from "@/lib/schedule-notification";
+import { scheduleEventReminderNotification, cancelNotification } from "@/lib/notifications/queue";
 interface DalError { error: string }
 
 export async function attendEvent(
@@ -26,7 +26,7 @@ export async function attendEvent(
   }
 
   try {
-    await scheduleEventReminder(userId, event);
+    await scheduleEventReminderNotification(userId, event);
   } catch (err) {
     console.error("Failed to schedule event reminder:", err);
   }
@@ -50,7 +50,7 @@ export async function unattendEvent(
   }
 
   try {
-    await cancelEventReminder(userId, eventId);
+    await cancelNotification({ userId, type: "EVENT_REMINDER", dedupeKey: eventId });
   } catch (err) {
     console.error("Failed to cancel event reminder:", err);
   }
@@ -121,7 +121,7 @@ export async function registerEvent(
   }
 
   try {
-    await scheduleEventReminder(userId, {
+    await scheduleEventReminderNotification(userId, {
       id: event.id,
       title: event.title,
       datetime: event.datetime,
