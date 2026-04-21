@@ -1,4 +1,4 @@
-"use cache";
+"use cache: remote";
 
 import { cacheTag } from "next/cache";
 import { prisma } from "@/lib/db";
