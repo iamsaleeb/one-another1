@@ -77,8 +77,6 @@ jobs:
     needs: [lint, typecheck, test]
     environment: preview
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
@@ -93,6 +91,8 @@ jobs:
         run: npx prisma generate
 
       - name: Assert DATABASE_URL is not production
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           if echo "$DATABASE_URL" | grep -qiE "prod[^a-z]|production"; then
             echo "ERROR: DATABASE_URL appears to be a production database. Aborting." >&2
@@ -100,21 +100,29 @@ jobs:
           fi
 
       - name: Wipe and reseed preview database
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: npx prisma migrate reset --force
 
       - name: Install Vercel CLI
         run: npm install -g vercel
 
       - name: Pull Vercel environment variables
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: npx vercel pull --yes --environment=preview --token=$VERCEL_TOKEN
 
       - name: Build
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: npx vercel build --token=$VERCEL_TOKEN
 
       - name: Deploy to Vercel
         id: deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          DEPLOY_URL=$(npx vercel deploy --prebuilt --token=$VERCEL_TOKEN 2>/dev/null | tail -1)
+          DEPLOY_URL=$(npx vercel deploy --prebuilt --token=$VERCEL_TOKEN | tail -1)
           {
             echo "url<<EOF"
             echo "$DEPLOY_URL"
