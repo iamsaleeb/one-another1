@@ -15,7 +15,7 @@ export default function AppLayout({
 }) {
   return (
     <div className="min-h-screen">
-      <Suspense>
+      <Suspense fallback={<AppShellNavFallback />}>
         <AppShellNav />
       </Suspense>
       <main className="pb-nav">{children}</main>
@@ -23,6 +23,15 @@ export default function AppLayout({
         <BackButtonProvider />
       </Suspense>
     </div>
+  );
+}
+
+function AppShellNavFallback() {
+  return (
+    <>
+      <TopNav />
+      <BottomNav />
+    </>
   );
 }
 
