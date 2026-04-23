@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.13.2](https://github.com/iamsaleeb/one-another/compare/one-another-v0.13.1...one-another-v0.13.2) (2026-04-23)
+
+
+### Bug Fixes
+
+* fix database seeding ([#84](https://github.com/iamsaleeb/one-another/issues/84)) ([0bcf78d](https://github.com/iamsaleeb/one-another/commit/0bcf78d029f146f8e6d41f6f71274d893948c3ce))
+* vercel feature branch deploys ([#82](https://github.com/iamsaleeb/one-another/issues/82)) ([bee245a](https://github.com/iamsaleeb/one-another/commit/bee245a7041cc797e4531649396e49c4955eb50b))
+
 ## [0.13.1](https://github.com/iamsaleeb/one-another/compare/one-another-v0.13.0...one-another-v0.13.1) (2026-04-21)
 
 
