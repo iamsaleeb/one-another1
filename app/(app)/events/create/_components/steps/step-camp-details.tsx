@@ -15,9 +15,12 @@ import {
 } from "@/components/ui/form";
 import type { CreateEventInput } from "@/lib/validations/event";
 
-export function StepCampDetails() {
+interface StepCampDetailsProps {
+  disabled?: boolean;
+}
+
+export function StepCampDetails({ disabled }: StepCampDetailsProps) {
   const form = useFormContext<CreateEventInput>();
-  const { isSubmitting } = form.formState;
   const startDate = useWatch({ control: form.control, name: "date" });
 
   const { fields, append, remove } = useFieldArray({
@@ -38,7 +41,7 @@ export function StepCampDetails() {
             <FormControl>
               <Input
                 type="date"
-                disabled={isSubmitting}
+                disabled={disabled}
                 min={startDate ?? undefined}
                 {...field}
                 value={field.value ?? ""}
@@ -64,7 +67,7 @@ export function StepCampDetails() {
               <Switch
                 checked={field.value ?? false}
                 onCheckedChange={field.onChange}
-                disabled={isSubmitting}
+                disabled={disabled}
               />
             </FormControl>
           </FormItem>
@@ -94,7 +97,7 @@ export function StepCampDetails() {
                 size="icon"
                 className="size-7 text-destructive hover:text-destructive"
                 onClick={() => remove(index)}
-                disabled={isSubmitting}
+                disabled={disabled}
               >
                 <Trash2 className="size-3.5" />
               </Button>
@@ -110,7 +113,7 @@ export function StepCampDetails() {
                     <FormControl>
                       <Input
                         type="date"
-                        disabled={isSubmitting}
+                        disabled={disabled}
                         min={startDate ?? undefined}
                         {...f}
                         value={f.value ?? ""}
@@ -129,7 +132,7 @@ export function StepCampDetails() {
                     <FormControl>
                       <Input
                         type="time"
-                        disabled={isSubmitting}
+                        disabled={disabled}
                         {...f}
                         value={f.value ?? ""}
                       />
@@ -149,7 +152,7 @@ export function StepCampDetails() {
                   <FormControl>
                     <Input
                       placeholder="e.g. Morning worship"
-                      disabled={isSubmitting}
+                      disabled={disabled}
                       {...f}
                     />
                   </FormControl>
@@ -167,7 +170,7 @@ export function StepCampDetails() {
                   <FormControl>
                     <Textarea
                       rows={2}
-                      disabled={isSubmitting}
+                      disabled={disabled}
                       {...f}
                       value={f.value ?? ""}
                     />
@@ -195,7 +198,7 @@ export function StepCampDetails() {
               description: undefined,
             })
           }
-          disabled={isSubmitting}
+          disabled={disabled}
         >
           <Plus className="size-4 mr-1" />
           Add Agenda Item

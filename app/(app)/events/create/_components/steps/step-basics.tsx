@@ -25,11 +25,11 @@ import type { CreateEventInput } from "@/lib/validations/event";
 interface StepBasicsProps {
   churches: { id: string; name: string }[];
   series?: { id: string; name: string; churchId: string; churchName: string } | null;
+  disabled?: boolean;
 }
 
-export function StepBasics({ churches, series }: StepBasicsProps) {
+export function StepBasics({ churches, series, disabled }: StepBasicsProps) {
   const form = useFormContext<CreateEventInput>();
-  const { isSubmitting } = form.formState;
 
   return (
     <div className="flex flex-col gap-5">
@@ -65,7 +65,7 @@ export function StepBasics({ churches, series }: StepBasicsProps) {
             <FormControl>
               <Input
                 placeholder="e.g. Sunday Evening Worship"
-                disabled={isSubmitting}
+                disabled={disabled}
                 {...field}
               />
             </FormControl>
@@ -84,7 +84,7 @@ export function StepBasics({ churches, series }: StepBasicsProps) {
               <Textarea
                 rows={4}
                 placeholder="e.g. Join us for an evening of worship, prayer and community. All are welcome."
-                disabled={isSubmitting}
+                disabled={disabled}
                 {...field}
               />
             </FormControl>
@@ -102,7 +102,7 @@ export function StepBasics({ churches, series }: StepBasicsProps) {
             <Select
               onValueChange={field.onChange}
               defaultValue={field.value}
-              disabled={isSubmitting}
+              disabled={disabled}
             >
               <FormControl>
                 <SelectTrigger>
@@ -144,7 +144,7 @@ export function StepBasics({ churches, series }: StepBasicsProps) {
               <Select
                 onValueChange={field.onChange}
                 defaultValue={field.value}
-                disabled={isSubmitting}
+                disabled={disabled}
               >
                 <FormControl>
                   <SelectTrigger>

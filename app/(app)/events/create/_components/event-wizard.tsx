@@ -8,7 +8,7 @@ import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { createEventSchema, type CreateEventInput } from "@/lib/validations/event";
 import { saveDraftAction, updateEventAction } from "@/lib/actions/events-crud";
-import { utcIsoToLocalInputs } from "@/lib/datetime";
+import { localInputsToUtcDate, utcIsoToLocalInputs } from "@/lib/datetime";
 import { WizardProgress } from "./wizard-progress";
 import { StepBasics } from "./steps/step-basics";
 import { StepWhenWhere } from "./steps/step-when-where";
@@ -98,16 +98,29 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
 
   const activeSteps = [...BASE_STEPS, ...(tag === "Camp" ? [CAMP_STEP] : []), REVIEW_STEP];
 
+  const buildData = (): CreateEventInput & { datetimeISO?: string } => {
+    const data = form.getValues();
+    if (data.date && data.time) {
+      return { ...data, datetimeISO: localInputsToUtcDate(data.date, data.time).toISOString() };
+    }
+    return data;
+  };
+
   const handleNext = async () => {
     const fields = STEP_FIELDS[currentStep];
     if (!fields) return;
     const valid = await form.trigger(fields as (keyof CreateEventInput)[]);
     if (!valid) return;
 
+    // Step 0 in create mode: no date/time yet, skip draft save — just advance
+    if (currentStep === 0 && !draftId) {
+      setCurrentStep((s) => s + 1);
+      return;
+    }
+
     setIsSaving(true);
     try {
-      const data = form.getValues();
-      const result = await saveDraftAction(draftId, data);
+      const result = await saveDraftAction(draftId, buildData());
       if ("error" in result) {
         toast.error(result.error);
         return;
@@ -124,8 +137,7 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
   const handleSaveDraft = async () => {
     setIsSaving(true);
     try {
-      const data = form.getValues();
-      const result = await saveDraftAction(draftId, data);
+      const result = await saveDraftAction(draftId, buildData());
       if ("error" in result) {
         toast.error(result.error);
         return;
@@ -144,9 +156,9 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
     }
     setIsPublishing(true);
     try {
-      const data = form.getValues();
-      const result = await updateEventAction(draftId, { ...data, isDraft: false });
+      const result = await updateEventAction(draftId, { ...buildData(), isDraft: false });
       if (result?.error) toast.error(result.error);
+      if (result?.fieldErrors) toast.error("Please review all fields before publishing.");
       // updateEventAction redirects on success — no need to handle success case
     } finally {
       setIsPublishing(false);
@@ -169,15 +181,16 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
       );
     }
 
+    const disabled = isSaving || isPublishing;
     switch (currentStep) {
       case 0:
-        return <StepBasics churches={churches} series={series} />;
+        return <StepBasics churches={churches} series={series} disabled={disabled} />;
       case 1:
-        return <StepWhenWhere />;
+        return <StepWhenWhere disabled={disabled} />;
       case 2:
-        return <StepRegistration />;
+        return <StepRegistration disabled={disabled} />;
       case 3:
-        return <StepCampDetails />;
+        return <StepCampDetails disabled={disabled} />;
       default:
         return null;
     }

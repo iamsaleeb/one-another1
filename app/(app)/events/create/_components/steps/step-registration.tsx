@@ -14,9 +14,12 @@ import {
 } from "@/components/ui/form";
 import type { CreateEventInput } from "@/lib/validations/event";
 
-export function StepRegistration() {
+interface StepRegistrationProps {
+  disabled?: boolean;
+}
+
+export function StepRegistration({ disabled }: StepRegistrationProps) {
   const form = useFormContext<CreateEventInput>();
-  const { isSubmitting } = form.formState;
 
   const requiresRegistration = useWatch({ control: form.control, name: "requiresRegistration" });
   const tag = useWatch({ control: form.control, name: "tag" });
@@ -35,7 +38,7 @@ export function StepRegistration() {
           <FormItem>
             <FormLabel>Price (optional)</FormLabel>
             <FormControl>
-              <PriceInput disabled={isSubmitting} {...field} />
+              <PriceInput disabled={disabled} {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -57,7 +60,7 @@ export function StepRegistration() {
               <Switch
                 checked={field.value ?? false}
                 onCheckedChange={field.onChange}
-                disabled={isSubmitting || isCamp}
+                disabled={disabled || isCamp}
               />
             </FormControl>
           </FormItem>
@@ -79,7 +82,7 @@ export function StepRegistration() {
                     type="number"
                     min={1}
                     placeholder="Unlimited"
-                    disabled={isSubmitting}
+                    disabled={disabled}
                     {...field}
                     value={field.value ?? ""}
                     onChange={(e) =>
@@ -102,7 +105,7 @@ export function StepRegistration() {
                   <Switch
                     checked={field.value ?? false}
                     onCheckedChange={field.onChange}
-                    disabled={isSubmitting}
+                    disabled={disabled}
                   />
                 </FormControl>
               </FormItem>
@@ -119,7 +122,7 @@ export function StepRegistration() {
                   <Switch
                     checked={field.value ?? false}
                     onCheckedChange={field.onChange}
-                    disabled={isSubmitting}
+                    disabled={disabled}
                   />
                 </FormControl>
               </FormItem>

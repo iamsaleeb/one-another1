@@ -8,7 +8,6 @@ import { createEventSchema, type CreateEventInput } from "@/lib/validations/even
 import { createEvent, updateEvent, cancelEvent, uncancelEvent, publishEvent, unpublishEvent, deleteEvent } from "@/lib/dal/events";
 import type { ActionResult } from "@/lib/actions/auth";
 import { broadcastEventChange, invalidateEventFields } from "@/lib/actions/_cache";
-import { localInputsToUtcDate } from "@/lib/datetime";
 
 export async function createEventAction(data: CreateEventInput): Promise<ActionResult> {
   const session = await auth();
@@ -103,12 +102,7 @@ export async function saveDraftAction(
     return { error: "Unauthorised." };
   }
 
-  let datetimeISO: string | undefined;
-  if (data.date && data.time) {
-    datetimeISO = localInputsToUtcDate(data.date, data.time).toISOString();
-  }
-
-  const parsed = createEventSchema.safeParse({ ...data, datetimeISO });
+  const parsed = createEventSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid data." };
 
   if (!id) {
