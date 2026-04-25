@@ -98,7 +98,7 @@ export async function createEvent(
   if (!allowed) return { error: "You are not assigned to this church." };
 
   const isCamp = tag === "Camp";
-  if (isCamp && !campEndDate) return { fieldErrors: { campEndDate: ["End date is required for camp events"] } };
+  if (isCamp && !campEndDate && !isDraft) return { fieldErrors: { campEndDate: ["End date is required for camp events"] } };
 
   const created = await prisma.event.create({
     data: {
@@ -210,7 +210,7 @@ export async function updateEvent(
   }
 
   const isCamp = tag === "Camp";
-  if (isCamp && !campEndDate) return { fieldErrors: { campEndDate: ["End date is required for camp events"] } };
+  if (isCamp && !campEndDate && !isDraft) return { fieldErrors: { campEndDate: ["End date is required for camp events"] } };
 
   await prisma.event.update({
     where: { id },

@@ -96,28 +96,28 @@ export async function unpublishEventAction(id: string): Promise<ActionResult> {
 export async function saveDraftAction(
   id: string | undefined,
   data: SaveDraftInput
-): Promise<{ eventId: string } | { error: string }> {
+): Promise<{ eventId: string } | ActionResult> {
   const session = await auth();
   if (session?.user?.role !== UserRole.ORGANISER && session?.user?.role !== UserRole.ADMIN) {
     return { error: "Unauthorised." };
   }
 
   const parsed = saveDraftSchema.safeParse(data);
-  if (!parsed.success) return { error: "Invalid data." };
+  if (!parsed.success) return { fieldErrors: parsed.error.flatten().fieldErrors };
 
   if (!id) {
     const result = await createEvent({ ...parsed.data, isDraft: true }, session.user.id, session.user.role);
-    if ("error" in result || "fieldErrors" in result) {
-      return { error: ("error" in result ? result.error : undefined) ?? "Failed to save draft." };
-    }
+    if ("error" in result || "fieldErrors" in result) return result;
     invalidateEventFields(result.id, result.churchId, result.seriesId ?? null);
     return { eventId: result.id };
   } else {
     const result = await updateEvent(id, { ...parsed.data, isDraft: true }, session.user.id, session.user.role);
-    if ("error" in result || "fieldErrors" in result) {
-      return { error: "error" in result ? (result.error ?? "Failed to save draft.") : "Failed to save draft." };
+    if ("error" in result || "fieldErrors" in result) return result;
+    invalidateEventFields(id, result.oldChurchId);
+    if (result.affectedSeriesIds.length > 0) {
+      updateTag("series");
+      result.affectedSeriesIds.forEach((sid) => updateTag(`series-${sid}`));
     }
-    invalidateEventFields(id, result.oldChurchId, result.affectedSeriesIds[0] ?? null);
     return { eventId: id };
   }
 }

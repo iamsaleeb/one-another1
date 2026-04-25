@@ -92,6 +92,7 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
   // Refs so the auto-save closure always sees the latest values without re-subscribing
   const draftIdRef = useRef(draftId);
   const isBusyRef = useRef(false);
+  const autoSaveInFlightRef = useRef(false);
   const setDraftIdRef = useRef(setDraftId);
   useEffect(() => { draftIdRef.current = draftId; }, [draftId]);
   useEffect(() => { isBusyRef.current = isSaving || isPublishing; }, [isSaving, isPublishing]);
@@ -112,7 +113,7 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
     const { unsubscribe } = form.watch(() => {
       clearTimeout(timer);
       timer = setTimeout(async () => {
-        if (isBusyRef.current) return;
+        if (isBusyRef.current || autoSaveInFlightRef.current) return;
         const data = form.getValues();
         // Skip auto-create if the form is completely empty (user hasn't started)
         if (!draftIdRef.current && !data.title && !data.description && !data.tag) return;
@@ -120,10 +121,15 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
           data.date && data.time
             ? { ...data, datetimeISO: localInputsToUtcDate(data.date, data.time).toISOString() }
             : data;
-        const result = await saveDraftAction(draftIdRef.current, payload);
-        if ("eventId" in result && !draftIdRef.current) {
-          draftIdRef.current = result.eventId;
-          setDraftIdRef.current(result.eventId);
+        autoSaveInFlightRef.current = true;
+        try {
+          const result = await saveDraftAction(draftIdRef.current, payload);
+          if ("eventId" in result && !draftIdRef.current) {
+            draftIdRef.current = result.eventId;
+            setDraftIdRef.current(result.eventId);
+          }
+        } finally {
+          autoSaveInFlightRef.current = false;
         }
       }, 1500);
     });
@@ -135,6 +141,7 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
   }, [form]);
 
   const tag = useWatch({ control: form.control, name: "tag" });
+  const isDraft = useWatch({ control: form.control, name: "isDraft" });
 
   const activeSteps = [...BASE_STEPS, ...(tag === "Camp" ? [CAMP_STEP] : []), REVIEW_STEP];
 
@@ -156,8 +163,8 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
     try {
       const isNew = !draftId;
       const result = await saveDraftAction(draftId, buildData());
-      if ("error" in result) {
-        toast.error(result.error);
+      if (!("eventId" in result)) {
+        toast.error("error" in result ? result.error : "Please check your entries and try again.");
         return;
       }
       setDraftId(result.eventId);
@@ -174,11 +181,12 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
     setIsSaving(true);
     try {
       const result = await saveDraftAction(draftId, buildData());
-      if ("error" in result) {
-        toast.error(result.error);
+      if (!("eventId" in result)) {
+        toast.error("error" in result ? result.error : "Please check your entries and try again.");
         return;
       }
       setDraftId(result.eventId);
+      form.setValue("isDraft", true, { shouldDirty: false });
       toast.success("Draft saved");
     } finally {
       setIsSaving(false);
@@ -218,7 +226,7 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
           onSaveDraft={handleSaveDraft}
           isPublishing={isPublishing}
           isSaving={isSaving}
-          isDraftEvent={!!draftId}
+          isDraftEvent={!!isDraft}
           churches={churches}
         />
       );

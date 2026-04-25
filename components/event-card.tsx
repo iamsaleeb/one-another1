@@ -38,7 +38,7 @@ className="object-cover"
           <CardContent className="flex flex-col gap-1 p-4">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold text-primary uppercase tracking-wide">
-              {event.datetime ? <EventDatetime datetime={event.datetime} /> : <span className="text-sm text-muted-foreground">Date TBD</span>}
+              <EventDatetime datetime={event.datetime} />
             </p>
             {event.isDraft ? (
               <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700 whitespace-nowrap">
