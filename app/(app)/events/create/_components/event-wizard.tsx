@@ -91,6 +91,7 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
       form.setValue("date", date, { shouldDirty: false });
       form.setValue("time", time, { shouldDirty: false });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const tag = useWatch({ control: form.control, name: "tag" });
@@ -99,6 +100,7 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
 
   const handleNext = async () => {
     const fields = STEP_FIELDS[currentStep];
+    if (!fields) return;
     const valid = await form.trigger(fields as (keyof CreateEventInput)[]);
     if (!valid) return;
 
