@@ -21,7 +21,7 @@ export default async function EditEventPage({ params }: Props) {
   const churches = await getChurchesByManager(session.user.id);
   if (!churches.some((c) => c.id === event.churchId)) notFound();
 
-  const datetimeISO = event.datetime.toISOString();
+  const datetimeISO = event.datetime?.toISOString() ?? "";
   const { registration, camp } = parseEventMetadata(event.metadata);
 
   return (
@@ -35,8 +35,8 @@ export default async function EditEventPage({ params }: Props) {
           defaultValues={{
             title: event.title,
             datetimeISO,
-            location: event.location,
-            host: event.host,
+            location: event.location ?? "",
+            host: event.host ?? "",
             tag: event.tag,
             description: event.description,
             churchId: event.churchId ?? "",

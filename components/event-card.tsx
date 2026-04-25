@@ -7,10 +7,10 @@ import { TAG_COLORS, type Category } from "@/types/search";
 interface EventCardProps {
   event: {
     id: string;
-    datetime: Date;
+    datetime: Date | null;
     title: string;
     churchName: string;
-    host: string;
+    host: string | null;
     tag: string;
     badge: string;
     cancelledAt?: Date | null;
@@ -38,7 +38,7 @@ className="object-cover"
           <CardContent className="flex flex-col gap-1 p-4">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold text-primary uppercase tracking-wide">
-              <EventDatetime datetime={event.datetime} />
+              {event.datetime ? <EventDatetime datetime={event.datetime} /> : <span className="text-sm text-muted-foreground">Date TBD</span>}
             </p>
             {event.isDraft ? (
               <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700 whitespace-nowrap">
@@ -59,7 +59,7 @@ className="object-cover"
           </div>
           <p className="text-lg font-bold leading-snug">{event.title}</p>
           <p className="text-sm font-semibold text-muted-foreground">{event.churchName}</p>
-          <p className="text-sm text-muted-foreground">{event.host}</p>
+          <p className="text-sm text-muted-foreground">{event.host ?? "TBD"}</p>
         </CardContent>
         </div>
       </Card>

@@ -112,12 +112,6 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
     const valid = await form.trigger(fields as (keyof CreateEventInput)[]);
     if (!valid) return;
 
-    // Step 0 in create mode: no date/time yet, skip draft save — just advance
-    if (currentStep === 0 && !draftId) {
-      setCurrentStep((s) => s + 1);
-      return;
-    }
-
     setIsSaving(true);
     try {
       const result = await saveDraftAction(draftId, buildData());

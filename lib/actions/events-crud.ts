@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { updateTag } from "next/cache";
 import { auth } from "@/auth";
 import { UserRole } from "@prisma/client";
-import { createEventSchema, type CreateEventInput } from "@/lib/validations/event";
+import { createEventSchema, saveDraftSchema, type CreateEventInput, type SaveDraftInput } from "@/lib/validations/event";
 import { createEvent, updateEvent, cancelEvent, uncancelEvent, publishEvent, unpublishEvent, deleteEvent } from "@/lib/dal/events";
 import type { ActionResult } from "@/lib/actions/auth";
 import { broadcastEventChange, invalidateEventFields } from "@/lib/actions/_cache";
@@ -95,14 +95,14 @@ export async function unpublishEventAction(id: string): Promise<ActionResult> {
 
 export async function saveDraftAction(
   id: string | undefined,
-  data: CreateEventInput
+  data: SaveDraftInput
 ): Promise<{ eventId: string } | { error: string }> {
   const session = await auth();
   if (session?.user?.role !== UserRole.ORGANISER && session?.user?.role !== UserRole.ADMIN) {
     return { error: "Unauthorised." };
   }
 
-  const parsed = createEventSchema.safeParse(data);
+  const parsed = saveDraftSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid data." };
 
   if (!id) {

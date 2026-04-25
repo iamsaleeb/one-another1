@@ -38,6 +38,17 @@ export const createEventSchema = z.object({
 
 export type CreateEventInput = z.infer<typeof createEventSchema>;
 
+export const saveDraftSchema = createEventSchema.extend({
+  date: z.string().optional().default(""),
+  time: z.string().optional().default(""),
+  location: z.string().optional().default(""),
+  host: z.string().optional().default(""),
+  description: z.string().optional().default(""),
+  tag: z.string().optional().default(""),
+  title: z.string().optional().default(""),
+});
+export type SaveDraftInput = z.infer<typeof saveDraftSchema>;
+
 export const registerEventSchema = z.object({
   phone: z.string().optional(),
   notes: z.string().optional(),

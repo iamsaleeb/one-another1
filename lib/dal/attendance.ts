@@ -91,7 +91,7 @@ export async function registerEvent(
 
   let validatedSelectedDays: string[] | undefined;
   if (eventMeta.camp?.allowPartialRegistration && eventMeta.camp.endDate) {
-    const startDate = event.datetime.toISOString().slice(0, 10);
+    const startDate = event.datetime?.toISOString().slice(0, 10) ?? "";
     const endDate = eventMeta.camp.endDate;
     const inRange = (d: string) => d >= startDate && d <= endDate;
 
