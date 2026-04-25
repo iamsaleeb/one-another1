@@ -12,6 +12,7 @@ interface StepReviewProps {
   isPublishing: boolean;
   isSaving: boolean;
   isDraftEvent?: boolean;
+  churches: { id: string; name: string }[];
 }
 
 export function StepReview({
@@ -20,6 +21,7 @@ export function StepReview({
   isPublishing,
   isSaving,
   isDraftEvent,
+  churches,
 }: StepReviewProps) {
   const form = useFormContext<CreateEventInput>();
 
@@ -99,7 +101,7 @@ export function StepReview({
             />
           ) : null}
           <p className="text-sm text-muted-foreground">
-            {churchId ? `Church ID: ${churchId}` : "Not set"}
+            {churches.find(c => c.id === churchId)?.name ?? (churchId ? "Unknown church" : "Not set")}
           </p>
         </div>
       </div>
