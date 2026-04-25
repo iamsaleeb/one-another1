@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useFormContext, useWatch } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +13,7 @@ interface StepReviewProps {
   isPublishing: boolean;
   isSaving: boolean;
   isDraftEvent?: boolean;
-  churches: { id: string; name: string }[];
+  churches: Array<{ id: string; name: string }>;
 }
 
 export function StepReview({
@@ -94,9 +95,11 @@ export function StepReview({
         </p>
         <div className="flex items-center gap-3">
           {photoUrl ? (
-            <img
+            <Image
               src={photoUrl}
               alt="Event cover"
+              width={64}
+              height={64}
               className="object-cover rounded-lg w-16 h-16 shrink-0"
             />
           ) : null}

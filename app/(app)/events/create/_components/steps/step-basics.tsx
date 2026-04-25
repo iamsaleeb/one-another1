@@ -23,7 +23,7 @@ import { CATEGORY_OPTIONS } from "@/types/search";
 import type { CreateEventInput } from "@/lib/validations/event";
 
 interface StepBasicsProps {
-  churches: { id: string; name: string }[];
+  churches: Array<{ id: string; name: string }>;
   series?: { id: string; name: string; churchId: string; churchName: string } | null;
   disabled?: boolean;
 }

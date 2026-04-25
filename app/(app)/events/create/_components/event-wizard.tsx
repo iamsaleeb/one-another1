@@ -43,7 +43,7 @@ const BASE_STEPS = [
 const CAMP_STEP = { label: "Camp Details" };
 const REVIEW_STEP = { label: "Review" };
 
-const STEP_FIELDS: (keyof CreateEventInput)[][] = [
+const STEP_FIELDS: Array<Array<keyof CreateEventInput>> = [
   ["title", "description", "tag", "churchId", "photoUrl"],
   ["date", "time", "location", "host"],
   ["price", "requiresRegistration", "capacity", "collectPhone", "collectNotes"],
@@ -56,7 +56,7 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
 
-  const { datetimeISO, ...restDefaultValues } = defaultValues ?? {};
+  const { datetimeISO: _datetimeISO, ...restDefaultValues } = defaultValues ?? {};
 
   const form = useForm<CreateEventInput>({
     resolver: zodResolver(createEventSchema),
@@ -109,7 +109,7 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
   const handleNext = async () => {
     const fields = STEP_FIELDS[currentStep];
     if (!fields) return;
-    const valid = await form.trigger(fields as (keyof CreateEventInput)[]);
+    const valid = await form.trigger(fields as Array<keyof CreateEventInput>);
     if (!valid) return;
 
     setIsSaving(true);
