@@ -14,11 +14,7 @@ import {
 } from "@/components/ui/form";
 import type { CreateEventInput } from "@/lib/validations/event";
 
-interface StepRegistrationProps {
-  disabled?: boolean;
-}
-
-export function StepRegistration({ disabled }: StepRegistrationProps) {
+export function StepRegistration() {
   const form = useFormContext<CreateEventInput>();
 
   const requiresRegistration = useWatch({ control: form.control, name: "requiresRegistration" });
@@ -38,7 +34,7 @@ export function StepRegistration({ disabled }: StepRegistrationProps) {
           <FormItem>
             <FormLabel>Price (optional)</FormLabel>
             <FormControl>
-              <PriceInput disabled={disabled} {...field} />
+              <PriceInput {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -60,7 +56,7 @@ export function StepRegistration({ disabled }: StepRegistrationProps) {
               <Switch
                 checked={field.value ?? false}
                 onCheckedChange={field.onChange}
-                disabled={disabled || isCamp}
+                disabled={isCamp}
               />
             </FormControl>
           </FormItem>
@@ -82,7 +78,6 @@ export function StepRegistration({ disabled }: StepRegistrationProps) {
                     type="number"
                     min={1}
                     placeholder="Unlimited"
-                    disabled={disabled}
                     {...field}
                     value={field.value ?? ""}
                     onChange={(e) =>
@@ -105,7 +100,6 @@ export function StepRegistration({ disabled }: StepRegistrationProps) {
                   <Switch
                     checked={field.value ?? false}
                     onCheckedChange={field.onChange}
-                    disabled={disabled}
                   />
                 </FormControl>
               </FormItem>
@@ -122,7 +116,6 @@ export function StepRegistration({ disabled }: StepRegistrationProps) {
                   <Switch
                     checked={field.value ?? false}
                     onCheckedChange={field.onChange}
-                    disabled={disabled}
                   />
                 </FormControl>
               </FormItem>

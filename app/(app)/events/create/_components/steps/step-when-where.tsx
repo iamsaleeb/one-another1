@@ -11,11 +11,7 @@ import {
 } from "@/components/ui/form";
 import type { CreateEventInput } from "@/lib/validations/event";
 
-interface StepWhenWhereProps {
-  disabled?: boolean;
-}
-
-export function StepWhenWhere({ disabled }: StepWhenWhereProps) {
+export function StepWhenWhere() {
   const form = useFormContext<CreateEventInput>();
 
   return (
@@ -28,7 +24,7 @@ export function StepWhenWhere({ disabled }: StepWhenWhereProps) {
             <FormItem>
               <FormLabel>Date</FormLabel>
               <FormControl>
-                <Input type="date" disabled={disabled} {...field} />
+                <Input type="date" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -41,7 +37,7 @@ export function StepWhenWhere({ disabled }: StepWhenWhereProps) {
             <FormItem>
               <FormLabel>Time</FormLabel>
               <FormControl>
-                <Input type="time" disabled={disabled} {...field} />
+                <Input type="time" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -58,7 +54,6 @@ export function StepWhenWhere({ disabled }: StepWhenWhereProps) {
             <FormControl>
               <Input
                 placeholder="e.g. 123 Church Street, Sydney NSW 2000"
-                disabled={disabled}
                 {...field}
               />
             </FormControl>
@@ -76,7 +71,6 @@ export function StepWhenWhere({ disabled }: StepWhenWhereProps) {
             <FormControl>
               <Input
                 placeholder="e.g. Pastor John Smith"
-                disabled={disabled}
                 {...field}
               />
             </FormControl>

@@ -24,31 +24,15 @@ export function StepReview({
   isDraftEvent,
   churches,
 }: StepReviewProps) {
-  const form = useFormContext<CreateEventInput>();
-
-  const title = useWatch({ control: form.control, name: "title" });
-  const description = useWatch({ control: form.control, name: "description" });
-  const tag = useWatch({ control: form.control, name: "tag" });
-  const date = useWatch({ control: form.control, name: "date" });
-  const time = useWatch({ control: form.control, name: "time" });
-  const location = useWatch({ control: form.control, name: "location" });
-  const host = useWatch({ control: form.control, name: "host" });
-  const churchId = useWatch({ control: form.control, name: "churchId" });
-  const photoUrl = useWatch({ control: form.control, name: "photoUrl" });
-  const price = useWatch({ control: form.control, name: "price" });
-  const requiresRegistration = useWatch({ control: form.control, name: "requiresRegistration" });
-  const capacity = useWatch({ control: form.control, name: "capacity" });
-  const collectPhone = useWatch({ control: form.control, name: "collectPhone" });
-  const collectNotes = useWatch({ control: form.control, name: "collectNotes" });
-  const campEndDate = useWatch({ control: form.control, name: "campEndDate" });
-  const campAllowPartialRegistration = useWatch({ control: form.control, name: "campAllowPartialRegistration" });
-  const campAgenda = useWatch({ control: form.control, name: "campAgenda" });
+  const { control } = useFormContext<CreateEventInput>();
+  const {
+    title, description, tag, date, time, location, host,
+    churchId, photoUrl, price, requiresRegistration, capacity,
+    collectPhone, collectNotes, campEndDate, campAllowPartialRegistration, campAgenda,
+  } = useWatch({ control });
 
   const isCamp = tag === "Camp";
   const isDisabled = isPublishing || isSaving;
-
-  const truncate = (text: string, max: number) =>
-    text && text.length > max ? `${text.slice(0, max)}…` : text;
 
   const formatDatetime = () => {
     if (!date) return "Not set";
@@ -58,7 +42,6 @@ export function StepReview({
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Event section */}
       <div className="flex flex-col gap-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Event
@@ -66,7 +49,7 @@ export function StepReview({
         <div className="flex flex-col gap-1">
           <p className="text-sm font-medium">{title || <span className="text-muted-foreground">No title</span>}</p>
           {description ? (
-            <p className="text-sm text-muted-foreground">{truncate(description, 100)}</p>
+            <p className="text-sm text-muted-foreground line-clamp-3">{description}</p>
           ) : null}
           {tag ? <Badge variant="secondary" className="w-fit">{tag}</Badge> : null}
         </div>
@@ -74,7 +57,6 @@ export function StepReview({
 
       <Separator />
 
-      {/* When & Where */}
       <div className="flex flex-col gap-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           When &amp; Where
@@ -88,7 +70,6 @@ export function StepReview({
 
       <Separator />
 
-      {/* Church & Photo */}
       <div className="flex flex-col gap-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Church &amp; Photo
@@ -111,7 +92,6 @@ export function StepReview({
 
       <Separator />
 
-      {/* Registration */}
       <div className="flex flex-col gap-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Registration

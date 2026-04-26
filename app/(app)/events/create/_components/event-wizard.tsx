@@ -93,7 +93,6 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
   const draftIdRef = useRef(draftId);
   const isBusyRef = useRef(false);
   const autoSaveInFlightRef = useRef(false);
-  const setDraftIdRef = useRef(setDraftId);
   useEffect(() => { draftIdRef.current = draftId; }, [draftId]);
   useEffect(() => { isBusyRef.current = isSaving || isPublishing; }, [isSaving, isPublishing]);
 
@@ -106,7 +105,7 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
     }
   }, [form]);
 
-  // Silently auto-save whenever form values change (create and edit flows)
+  // Silently auto-save whenever the user changes something
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
 
@@ -114,8 +113,10 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
       clearTimeout(timer);
       timer = setTimeout(async () => {
         if (isBusyRef.current || autoSaveInFlightRef.current) return;
+        // Skip saves driven purely by programmatic setValue (e.g. datetime seeding on mount)
+        if (!form.formState.isDirty) return;
         const data = form.getValues();
-        // Skip auto-create if the form is completely empty (user hasn't started)
+        // Don't create a draft until the user has typed something meaningful
         if (!draftIdRef.current && !data.title && !data.description && !data.tag) return;
         const payload =
           data.date && data.time
@@ -126,7 +127,7 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
           const result = await saveDraftAction(draftIdRef.current, payload);
           if ("eventId" in result && !draftIdRef.current) {
             draftIdRef.current = result.eventId;
-            setDraftIdRef.current(result.eventId);
+            setDraftId(result.eventId);
             form.setValue("isDraft", true, { shouldDirty: false });
           }
         } finally {
@@ -139,7 +140,7 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
       unsubscribe();
       clearTimeout(timer);
     };
-  }, [form]);
+  }, [form, setDraftId]);
 
   const tag = useWatch({ control: form.control, name: "tag" });
   const isDraft = useWatch({ control: form.control, name: "isDraft" });
@@ -154,29 +155,13 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
     return data;
   };
 
+  // Validate the current step's fields then advance — auto-save persists in the background
   const handleNext = async () => {
     const fields = STEP_FIELDS[currentStep];
     if (!fields) return;
     const valid = await form.trigger(fields as Array<keyof CreateEventInput>);
     if (!valid) return;
-
-    setIsSaving(true);
-    try {
-      const isNew = !draftId;
-      const result = await saveDraftAction(draftId, buildData());
-      if (!("eventId" in result)) {
-        toast.error("error" in result ? result.error : "Please check your entries and try again.");
-        return;
-      }
-      setDraftId(result.eventId);
-      if (isNew) {
-        form.setValue("isDraft", true, { shouldDirty: false });
-        toast.success("Draft saved — your progress is safe.");
-      }
-      setCurrentStep((s) => s + 1);
-    } finally {
-      setIsSaving(false);
-    }
+    setCurrentStep((s) => s + 1);
   };
 
   const handleBack = () => setCurrentStep((s) => Math.max(0, s - 1));
@@ -198,13 +183,21 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
   };
 
   const handlePublish = async () => {
-    if (!draftId) {
-      toast.error("Save a draft first.");
-      return;
-    }
     setIsPublishing(true);
     try {
-      const result = await saveEventAction(draftId, { ...buildData(), isDraft: false });
+      let id = draftId;
+      if (!id) {
+        // Edge case: user reaches publish before auto-save has fired
+        const draft = await saveDraftAction(undefined, { ...buildData(), isDraft: true });
+        if (!("eventId" in draft)) {
+          toast.error("error" in draft ? draft.error : "Failed to save. Please try again.");
+          return;
+        }
+        id = draft.eventId;
+        setDraftId(id);
+        form.setValue("isDraft", true, { shouldDirty: false });
+      }
+      const result = await saveEventAction(id, { ...buildData(), isDraft: false });
       if (result && "error" in result) {
         toast.error(result.error);
         return;
@@ -214,7 +207,7 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
         return;
       }
       toast.success("Event published!");
-      router.push(`/events/${draftId}`);
+      router.push(`/events/${id}`);
     } finally {
       setIsPublishing(false);
     }
@@ -236,16 +229,15 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
       );
     }
 
-    const disabled = isSaving || isPublishing;
     switch (currentStep) {
       case 0:
-        return <StepBasics churches={churches} series={series} disabled={disabled} />;
+        return <StepBasics churches={churches} series={series} />;
       case 1:
-        return <StepWhenWhere disabled={disabled} />;
+        return <StepWhenWhere />;
       case 2:
-        return <StepRegistration disabled={disabled} />;
+        return <StepRegistration />;
       case 3:
-        return <StepCampDetails disabled={disabled} />;
+        return <StepCampDetails />;
       default:
         return null;
     }
@@ -275,7 +267,6 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
                     type="button"
                     variant="outline"
                     onClick={handleBack}
-                    disabled={isSaving}
                     className="flex-1"
                   >
                     Back
@@ -284,10 +275,9 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
                 <Button
                   type="button"
                   onClick={handleNext}
-                  disabled={isSaving}
                   className="flex-1"
                 >
-                  {isSaving ? "Saving..." : "Next"}
+                  Next
                 </Button>
               </div>
             )}

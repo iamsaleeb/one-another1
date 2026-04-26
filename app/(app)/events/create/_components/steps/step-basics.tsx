@@ -25,10 +25,9 @@ import type { CreateEventInput } from "@/lib/validations/event";
 interface StepBasicsProps {
   churches: Array<{ id: string; name: string }>;
   series?: { id: string; name: string; churchId: string; churchName: string } | null;
-  disabled?: boolean;
 }
 
-export function StepBasics({ churches, series, disabled }: StepBasicsProps) {
+export function StepBasics({ churches, series }: StepBasicsProps) {
   const form = useFormContext<CreateEventInput>();
 
   return (
@@ -65,8 +64,7 @@ export function StepBasics({ churches, series, disabled }: StepBasicsProps) {
             <FormControl>
               <Input
                 placeholder="e.g. Sunday Evening Worship"
-                disabled={disabled}
-                {...field}
+                                {...field}
               />
             </FormControl>
             <FormMessage />
@@ -84,8 +82,7 @@ export function StepBasics({ churches, series, disabled }: StepBasicsProps) {
               <Textarea
                 rows={4}
                 placeholder="e.g. Join us for an evening of worship, prayer and community. All are welcome."
-                disabled={disabled}
-                {...field}
+                                {...field}
               />
             </FormControl>
             <FormMessage />
@@ -102,8 +99,7 @@ export function StepBasics({ churches, series, disabled }: StepBasicsProps) {
             <Select
               onValueChange={field.onChange}
               defaultValue={field.value}
-              disabled={disabled}
-            >
+                          >
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a category" />
@@ -144,8 +140,7 @@ export function StepBasics({ churches, series, disabled }: StepBasicsProps) {
               <Select
                 onValueChange={field.onChange}
                 defaultValue={field.value}
-                disabled={disabled}
-              >
+                              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a church" />
