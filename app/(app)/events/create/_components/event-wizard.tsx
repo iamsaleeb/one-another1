@@ -260,7 +260,7 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
       />
 
       <p className="text-xs text-muted-foreground text-center px-2">
-        Your progress is automatically saved as a draft — you can leave and come back any time.
+        Your progress is automatically saved — you can leave and come back any time.
       </p>
 
       <div className="rounded-2xl bg-white shadow-card p-5">
