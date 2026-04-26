@@ -111,9 +111,10 @@ export async function saveDraftAction(
     invalidateEventFields(result.id, result.churchId, result.seriesId ?? null);
     return { eventId: result.id };
   } else {
-    const result = await updateEvent(id, { ...parsed.data, isDraft: true }, session.user.id, session.user.role);
+    const result = await updateEvent(id, { ...parsed.data, isDraft: parsed.data.isDraft ?? true }, session.user.id, session.user.role);
     if ("error" in result || "fieldErrors" in result) return result;
     invalidateEventFields(id, result.oldChurchId);
+    if (result.newChurchId !== result.oldChurchId) updateTag(`church-${result.newChurchId}`);
     if (result.affectedSeriesIds.length > 0) {
       updateTag("series");
       result.affectedSeriesIds.forEach((sid) => updateTag(`series-${sid}`));

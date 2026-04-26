@@ -46,7 +46,7 @@ const REVIEW_STEP = { label: "Review" };
 
 const STEP_FIELDS: Array<Array<keyof CreateEventInput>> = [
   ["title", "description", "tag", "churchId", "photoUrl"],
-  ["date", "time", "location", "host"],
+  ["date", "time"],
   ["price", "requiresRegistration", "capacity", "collectPhone", "collectNotes"],
   ["campEndDate", "campAllowPartialRegistration", "campAgenda"],
 ];
@@ -127,6 +127,7 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
           if ("eventId" in result && !draftIdRef.current) {
             draftIdRef.current = result.eventId;
             setDraftIdRef.current(result.eventId);
+            form.setValue("isDraft", true, { shouldDirty: false });
           }
         } finally {
           autoSaveInFlightRef.current = false;
@@ -168,7 +169,10 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
         return;
       }
       setDraftId(result.eventId);
-      if (isNew) toast.success("Draft saved — your progress is safe.");
+      if (isNew) {
+        form.setValue("isDraft", true, { shouldDirty: false });
+        toast.success("Draft saved — your progress is safe.");
+      }
       setCurrentStep((s) => s + 1);
     } finally {
       setIsSaving(false);
@@ -180,7 +184,7 @@ export function EventWizard({ churches, series, eventId, defaultValues }: EventW
   const handleSaveDraft = async () => {
     setIsSaving(true);
     try {
-      const result = await saveDraftAction(draftId, buildData());
+      const result = await saveDraftAction(draftId, { ...buildData(), isDraft: true });
       if (!("eventId" in result)) {
         toast.error("error" in result ? result.error : "Please check your entries and try again.");
         return;

@@ -46,6 +46,17 @@ export const saveDraftSchema = createEventSchema.extend({
   description: z.string().optional().default(""),
   tag: z.string().optional().default(""),
   title: z.string().optional().default(""),
+  campAgenda: z
+    .array(
+      z.object({
+        id: z.string(),
+        date: z.string().optional().default(""),
+        time: z.string().optional(),
+        title: z.string().optional().default(""),
+        description: z.string().optional(),
+      })
+    )
+    .optional(),
 });
 export type SaveDraftInput = z.infer<typeof saveDraftSchema>;
 
